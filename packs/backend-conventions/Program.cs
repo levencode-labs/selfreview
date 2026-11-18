@@ -57,7 +57,8 @@ try
                 continue;
             }
 
-            Detector.Scan(source, change.Path, profile.Within(change.Path, profile.Test), changed, findings, diagnostics);
+            Detector.Scan(source, change.Path, profile.Within(change.Path, profile.Test),
+                profile.Within(change.Path, profile.UiTest ?? []), changed, findings, diagnostics);
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or DecoderFallbackException)
         {
@@ -127,13 +128,13 @@ static List<LineRange> AddedRanges(string patch)
 static bool Generated(string path) => new[] { ".g.cs", ".g.i.cs", ".generated.cs", ".designer.cs" }
     .Any(suffix => path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase));
 
-record Profile(string[] Include, string[] Test, string[] SqlUtf8)
+record Profile(string[] Include, string[] Test, string[] SqlUtf8, string[]? UiTest = null)
 {
     public void Validate()
     {
         if (Include is not { Length: > 0 } || Test is null || SqlUtf8 is null)
             throw new InvalidDataException("Profile requires include, test and sqlUtf8 directory lists.");
-        foreach (var path in Include.Concat(Test).Concat(SqlUtf8))
+        foreach (var path in Include.Concat(Test).Concat(SqlUtf8).Concat(UiTest ?? []))
         {
             if (string.IsNullOrWhiteSpace(path) || path.Contains('\\') || path.Contains(':') ||
                 path.Split('/').Any(segment => segment is "" or "." or ".."))
@@ -141,6 +142,8 @@ record Profile(string[] Include, string[] Test, string[] SqlUtf8)
         }
         if (Test.Concat(SqlUtf8).Any(path => !Include.Any(root => path == root || path.StartsWith(root + "/", StringComparison.Ordinal))))
             throw new InvalidDataException("Test and SQL scopes must be inside include.");
+        if ((UiTest ?? []).Any(path => !Test.Any(root => path == root || path.StartsWith(root + "/", StringComparison.Ordinal))))
+            throw new InvalidDataException("UI test scope must be inside test.");
     }
 
     public bool Within(string path, string[] roots) => roots.Any(root => path.StartsWith(root + "/", StringComparison.Ordinal));

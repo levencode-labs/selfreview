@@ -77,6 +77,14 @@ try {
     const badProfile = join(scratch, "invalid.json");
     writeFileSync(badProfile, JSON.stringify({ include: ["src/Example"], test: ["tests/Example"], sqlUtf8: [] }));
     assert.equal(check(good, good, 2, badProfile).diagnostics[0].code, "AUDIT");
+    const compatible = join(scratch, "legacy.json");
+    const legacy = JSON.parse(readFileSync(profile, "utf8"));
+    delete legacy.uiTest;
+    writeFileSync(compatible, JSON.stringify(legacy));
+    assert.deepEqual(check(base, good, 1, compatible).findings, report.findings.filter(
+        item => item.rule !== "TEST-004" && item.rule !== "TEST-005"));
+    writeFileSync(badProfile, JSON.stringify({ ...legacy, uiTest: ["src/Example"] }));
+    assert.equal(check(good, good, 2, badProfile).diagnostics[0].code, "AUDIT");
     console.log(JSON.stringify({ rules: ids.size, scenarios: matrix.length, positive: cases.size,
         manual: report.manualChecklist.length, gitAndIncompleteChecks: true }));
 } finally {

@@ -7,6 +7,9 @@
   "test": [
     "tests/Example"
   ],
+  "uiTest": [
+    "tests/Example/Ui"
+  ],
   "sqlUtf8": [
     "db/migrations"
   ]

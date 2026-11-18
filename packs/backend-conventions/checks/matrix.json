@@ -324,5 +324,329 @@
     "path": "src/Example/Report.sql",
     "after": "﻿SELECT 1;\n",
     "expected": false
+  },
+  {
+    "id": "CS-003",
+    "form": "Массив и extension-вызов",
+    "path": "src/Example/CS-003-1.cs",
+    "after": "using System.Linq; class Scan { int Size(string[] rows) => rows.Count(); }",
+    "expected": true
+  },
+  {
+    "id": "CS-003",
+    "form": "List и статический LINQ",
+    "path": "src/Example/CS-003-2.cs",
+    "after": "using System.Linq; using System.Collections.Generic; class Scan { int Size(List<int> rows) => Enumerable.Count(rows); }",
+    "expected": true
+  },
+  {
+    "id": "CS-003",
+    "form": "Явный аргумент типа и alias LINQ",
+    "path": "src/Example/CS-003-3.cs",
+    "after": "using Seq = System.Linq.Enumerable; class Scan { int Size(int[] rows) => Seq.Count<int>(rows); }",
+    "expected": true
+  },
+  {
+    "id": "CS-003",
+    "form": "Предикат нужен",
+    "path": "src/Example/CS-003-4.cs",
+    "after": "using System.Linq; class Scan { int Size(string[] rows) => rows.Count(x => x.Length != 0); }",
+    "expected": false
+  },
+  {
+    "id": "CS-003",
+    "form": "Абстрактный IEnumerable",
+    "path": "src/Example/CS-003-5.cs",
+    "after": "using System.Linq; using System.Collections.Generic; class Scan { int Size(IEnumerable<string> rows) => rows.Count(); }",
+    "expected": false
+  },
+  {
+    "id": "CS-003",
+    "form": "Пользовательский extension",
+    "path": "src/Example/CS-003-6.cs",
+    "after": "class Scan {} static class Custom { public static int Count(this Scan rows) => 7; } class Use { int Size(Scan rows) => rows.Count(); }",
+    "expected": false
+  },
+  {
+    "id": "CS-004",
+    "form": "Сравнение bool в условии",
+    "path": "src/Example/CS-004-1.cs",
+    "after": "class Flags { bool Decide(bool enabled) { if (enabled == false) return false; return true; } }",
+    "expected": true
+  },
+  {
+    "id": "CS-004",
+    "form": "Литерал слева и скобки",
+    "path": "src/Example/CS-004-2.cs",
+    "after": "class Flags { int Pick(bool enabled) => true != ((enabled)) ? 1 : 2; }",
+    "expected": true
+  },
+  {
+    "id": "CS-004",
+    "form": "bool? сохраняет третий случай",
+    "path": "src/Example/CS-004-3.cs",
+    "after": "class Flags { bool Decide(bool? enabled) => enabled == true; }",
+    "expected": false
+  },
+  {
+    "id": "CS-004",
+    "form": "Пользовательский оператор",
+    "path": "src/Example/CS-004-4.cs",
+    "after": "class Flags { public static bool operator ==(Flags a, bool b) => b; public static bool operator !=(Flags a, bool b) => !b; bool Decide(Flags other) => other == true; }",
+    "expected": false
+  },
+  {
+    "id": "CS-004",
+    "form": "Два литерала",
+    "path": "src/Example/CS-004-5.cs",
+    "after": "class Flags { bool Decide() => false == true; }",
+    "expected": false
+  },
+  {
+    "id": "CS-005",
+    "form": "Голый catch",
+    "path": "src/Example/CS-005-1.cs",
+    "after": "class Read { void Open() { try { Open(); } catch { } } }",
+    "expected": true
+  },
+  {
+    "id": "CS-005",
+    "form": "Типизированный catch с фильтром",
+    "path": "src/Example/CS-005-2.cs",
+    "after": "using System; class Read { void Open(bool retry) { try { Open(retry); } catch (InvalidOperationException) when (retry) { } } }",
+    "expected": true
+  },
+  {
+    "id": "CS-005",
+    "form": "Комментарий объясняет fallback",
+    "path": "src/Example/CS-005-3.cs",
+    "after": "class Read { void Open() { try { Open(); } catch { /* Optional input. The reader has a fallback. */ } } }",
+    "expected": false
+  },
+  {
+    "id": "CS-005",
+    "form": "Повторный throw",
+    "path": "src/Example/CS-005-4.cs",
+    "after": "class Read { void Open() { try { Open(); } catch { throw; } } }",
+    "expected": false
+  },
+  {
+    "id": "CS-005",
+    "form": "Неактивный обработчик требует проверки сборкой",
+    "path": "src/Example/CS-005-5.cs",
+    "after": "class Read { void Open() { try { Open(); } catch {\n#if ACTIVE\nthrow;\n#endif\n} } }",
+    "expected": false
+  },
+  {
+    "id": "ASYNC-001",
+    "form": "Task.Wait внутри async-метода",
+    "path": "src/Example/ASYNC-001-1.cs",
+    "after": "using System.Threading.Tasks; class Work { async Task Run(Task task) { task.Wait(); await Task.CompletedTask; } }",
+    "expected": true
+  },
+  {
+    "id": "ASYNC-001",
+    "form": "Task<T>.Result внутри async-лямбды",
+    "path": "src/Example/ASYNC-001-2.cs",
+    "after": "using System; using System.Threading.Tasks; class Work { Func<Task<int>> Run(Task<int> task) => async () => task.Result; }",
+    "expected": true
+  },
+  {
+    "id": "ASYNC-001",
+    "form": "ValueTask.GetAwaiter().GetResult в локальной async-функции",
+    "path": "src/Example/ASYNC-001-3.cs",
+    "after": "using System.Threading.Tasks; class Work { void Run(ValueTask operation) { async Task Local() { operation.GetAwaiter().GetResult(); await Task.CompletedTask; } } }",
+    "expected": true
+  },
+  {
+    "id": "ASYNC-001",
+    "form": "ValueTask<T>.Result",
+    "path": "src/Example/ASYNC-001-4.cs",
+    "after": "using System.Threading.Tasks; class Work { async Task<int> Run(ValueTask<int> task) => task.Result; }",
+    "expected": true
+  },
+  {
+    "id": "ASYNC-001",
+    "form": "Синхронная локальная функция в async-методе",
+    "path": "src/Example/ASYNC-001-5.cs",
+    "after": "using System.Threading.Tasks; class Work { async Task Run(Task operation) { void Sync() => operation.Wait(); await Task.CompletedTask; } }",
+    "expected": false
+  },
+  {
+    "id": "ASYNC-001",
+    "form": "Пользовательские Wait и Result",
+    "path": "src/Example/ASYNC-001-6.cs",
+    "after": "using System.Threading.Tasks; class Item { public void Wait() {} public int Result => 0; } class Work { async Task<int> Run(Item item) { item.Wait(); return item.Result; } }",
+    "expected": false
+  },
+  {
+    "id": "API-001",
+    "form": "Явный using и прямой return",
+    "path": "src/Example/API-001-1.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; [ApiController] class Endpoint : ControllerBase { object Update() { if (!ModelState.IsValid) return BadRequest(ModelState); return Ok(); } }",
+    "expected": true
+  },
+  {
+    "id": "API-001",
+    "form": "Квалифицированный атрибут и блочная форма",
+    "path": "src/Example/API-001-2.cs",
+    "after": "[global::Microsoft.AspNetCore.Mvc.ApiControllerAttribute] class Endpoint : Microsoft.AspNetCore.Mvc.ControllerBase { object Update() { if (!(this.ModelState.IsValid)) { return this.BadRequest(); } return Ok(); } }",
+    "expected": true
+  },
+  {
+    "id": "API-001",
+    "form": "Обычный MVC-контроллер без ApiController",
+    "path": "src/Example/API-001-3.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; class Endpoint : ControllerBase { object Update() { if (!ModelState.IsValid) return BadRequest(ModelState); return Ok(); } }",
+    "expected": false
+  },
+  {
+    "id": "API-001",
+    "form": "Своё состояние модели",
+    "path": "src/Example/API-001-4.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; [ApiController] class Endpoint : ControllerBase { object Update(Other ModelState) { if (!ModelState.IsValid) return BadRequest(ModelState); return Ok(); } } class Other { public bool IsValid => false; }",
+    "expected": false
+  },
+  {
+    "id": "API-001",
+    "form": "Атрибут из другого пространства имён",
+    "path": "src/Example/API-001-5.cs",
+    "after": "using System; class ApiControllerAttribute : Attribute {} [ApiController] class Endpoint { object Update() { if (!ModelState.IsValid) return BadRequest(); return Ok(); } }",
+    "expected": false
+  },
+  {
+    "id": "API-002",
+    "form": "Два отдельных атрибута",
+    "path": "src/Example/API-002-1.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; class Endpoint { [Route(\"settings\")]\n[HttpGet] object Read() => new(); }",
+    "expected": true
+  },
+  {
+    "id": "API-002",
+    "form": "Один список и alias Route",
+    "path": "src/Example/API-002-2.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; using ApiRoute = Microsoft.AspNetCore.Mvc.RouteAttribute; class Endpoint { [HttpPut(), ApiRoute(\"settings\")] void Update() {} }",
+    "expected": true
+  },
+  {
+    "id": "API-002",
+    "form": "Меняется только HTTP-атрибут",
+    "path": "src/Example/API-002-3.cs",
+    "after": "using Microsoft.AspNetCore.Mvc;\nclass Endpoint {\n[Route(\"settings\")]\n[HttpPost]\nvoid Update() {} }\n",
+    "expected": true,
+    "before": "using Microsoft.AspNetCore.Mvc;\nclass Endpoint {\n[Route(\"settings\")]\n[HttpPut]\nvoid Update() {} }\n",
+    "line": 4
+  },
+  {
+    "id": "API-002",
+    "form": "У метода метаданные маршрута",
+    "path": "src/Example/API-002-4.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; class Endpoint { [HttpPut(Order = 1), Route(\"settings\")] void Update() {} }",
+    "expected": false
+  },
+  {
+    "id": "API-002",
+    "form": "Два шаблона маршрута",
+    "path": "src/Example/API-002-5.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; class Endpoint { [Route(\"a\"), Route(\"b\"), HttpGet] void Update() {} }",
+    "expected": false
+  },
+  {
+    "id": "API-002",
+    "form": "Route на классе",
+    "path": "src/Example/API-002-6.cs",
+    "after": "using Microsoft.AspNetCore.Mvc; [Route(\"settings\")] class Endpoint { [HttpGet] void Read() {} }",
+    "expected": false
+  },
+  {
+    "id": "TEST-004",
+    "form": "Явный XPath в Locator",
+    "path": "tests/Example/Ui/TEST-004-1.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.Locator(\"xpath=//button\"); }",
+    "expected": true
+  },
+  {
+    "id": "TEST-004",
+    "form": "Относительный XPath и raw string",
+    "path": "tests/Example/Ui/TEST-004-2.cs",
+    "after": "class Screen { Microsoft.Playwright.ILocator slot; void Open() => slot.Locator(\"\"\"..//button\"\"\"); }",
+    "expected": true
+  },
+  {
+    "id": "TEST-004",
+    "form": "Устойчивый локатор по идентификатору",
+    "path": "tests/Example/Ui/TEST-004-3.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.GetByTestId(\"save\"); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-004",
+    "form": "CSS в Locator",
+    "path": "tests/Example/Ui/TEST-004-4.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.Locator(\"button[data-test='save']\"); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-004",
+    "form": "Тот же код вне UI-области",
+    "path": "tests/Example/Unit/TEST-004-5.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.Locator(\"//button\"); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-005",
+    "form": "Таймер на параметре IPage",
+    "path": "tests/Example/Ui/TEST-005-1.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.WaitForTimeoutAsync(25); }",
+    "expected": true
+  },
+  {
+    "id": "TEST-005",
+    "form": "Таймер на свойстве страницы",
+    "path": "tests/Example/Ui/TEST-005-2.cs",
+    "after": "class Screen { global::Microsoft.Playwright.IPage Page => throw new System.NotImplementedException(); void Open() => this.Page.WaitForTimeoutAsync(25); }",
+    "expected": true
+  },
+  {
+    "id": "TEST-005",
+    "form": "Ожидание состояния Playwright",
+    "path": "tests/Example/Ui/TEST-005-3.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.Locator(\"button\").WaitForAsync(); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-005",
+    "form": "Известный локальный тип IPage",
+    "path": "tests/Example/Ui/TEST-005-4.cs",
+    "after": "using Microsoft.Playwright; interface IPage { void WaitForTimeoutAsync(int value); } class Screen { void Open(IPage page) => page.WaitForTimeoutAsync(25); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-005",
+    "form": "Таймер вне UI-области",
+    "path": "tests/Example/Unit/TEST-005-5.cs",
+    "after": "using Microsoft.Playwright; class Screen { void Open(IPage page) => page.WaitForTimeoutAsync(25); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-004",
+    "form": "Явный движок XPath у унаследованного локатора",
+    "path": "tests/Example/Ui/TEST-004-6.cs",
+    "after": "class Header : Component { void Find() => Root.Locator(\"xpath=../label\"); }",
+    "expected": true
+  },
+  {
+    "id": "TEST-004",
+    "form": "Известный пользовательский Locator с таким же строковым аргументом",
+    "path": "tests/Example/Ui/TEST-004-7.cs",
+    "after": "class Widget { public object Locator(string key) => new(); } class Screen { void Find(Widget widget) => widget.Locator(\"xpath=local-key\"); }",
+    "expected": false
+  },
+  {
+    "id": "TEST-004",
+    "form": "Неявный XPath у неизвестного объекта",
+    "path": "tests/Example/Ui/TEST-004-8.cs",
+    "after": "class Header : Component { void Find() => Root.Locator(\"//label\"); }",
+    "expected": false
   }
 ]
