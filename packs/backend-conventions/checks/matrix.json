@@ -1,0 +1,328 @@
+[
+  {
+    "id": "CS-001",
+    "form": "Прямой повтор после вызова",
+    "path": "src/Example/Case1.cs",
+    "after": "class Route { void Execute() { Send();; } void Send() {} }",
+    "expected": true
+  },
+  {
+    "id": "CS-001",
+    "form": "Пробел между точками с запятой",
+    "path": "src/Example/Case2.cs",
+    "after": "class Route { void Execute() { Send(); ; } void Send() {} }",
+    "expected": true
+  },
+  {
+    "id": "CS-001",
+    "form": "После return в switch",
+    "path": "src/Example/Case3.cs",
+    "after": "class Route { void Execute() { switch (1) { case 1: return;; default: return; } } void Send() {} }",
+    "expected": true
+  },
+  {
+    "id": "CS-001",
+    "form": "Повтор за закрывающей строкой старого вызова",
+    "path": "src/Example/Case4.cs",
+    "after": "class Route { void Execute() {\n    Send();;\n} void Send() {} }",
+    "expected": true,
+    "before": "class Route { void Execute() {\n    Send();\n} void Send() {} }",
+    "line": 2
+  },
+  {
+    "id": "CS-001",
+    "form": "Обычный вызов",
+    "path": "src/Example/Case5.cs",
+    "after": "class Route { void Execute() { Send(); } void Send() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-001",
+    "form": "Умышленно пустое тело for",
+    "path": "src/Example/Case6.cs",
+    "after": "class Route { void Execute() { for (var index = 0; index < 3; index++); } void Send() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-001",
+    "form": "Точки с запятой внутри строки",
+    "path": "src/Example/Case7.cs",
+    "after": "class Route { void Execute() { var text = \"route;;\"; } void Send() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-001",
+    "form": "Старый дефект вне изменённых строк",
+    "path": "src/Example/Case8.cs",
+    "after": "class Route { void Execute() {\n    Send();;\n    Send();\n} void Send() {} }",
+    "expected": false,
+    "before": "class Route { void Execute() {\n    Send();;\n} void Send() {} }"
+  },
+  {
+    "id": "CS-001",
+    "form": "Вне области репозитория",
+    "path": "src/ExampleExtra/Case9.cs",
+    "after": "class Route { void Execute() { Send();; } void Send() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-001",
+    "form": "Генерируемый файл",
+    "path": "src/Example/Route.g.cs",
+    "after": "class Route { void Execute() { Send();; } void Send() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-002",
+    "form": "Подавление через default",
+    "path": "src/Example/Case11.cs",
+    "after": "public class Request { public string Title { get; init; } = default!; }",
+    "expected": true
+  },
+  {
+    "id": "CS-002",
+    "form": "Подавление через null",
+    "path": "src/Example/Case12.cs",
+    "after": "public class Request { public string Title { get; init; } = null!; }",
+    "expected": true
+  },
+  {
+    "id": "CS-002",
+    "form": "Инициализатор на новой строке",
+    "path": "src/Example/Case13.cs",
+    "after": "public class Request {\npublic string Title { get; init; } =\n    default!;\n}",
+    "expected": true,
+    "before": "public class Request {\npublic string Title { get; init; } =\n    \"ready\";\n}",
+    "line": 3
+  },
+  {
+    "id": "CS-002",
+    "form": "Обязательное строковое поле",
+    "path": "src/Example/Case14.cs",
+    "after": "public class Request { public required string Title { get; init; } }",
+    "expected": false
+  },
+  {
+    "id": "CS-002",
+    "form": "Необязательное поле",
+    "path": "src/Example/Case15.cs",
+    "after": "public class Request { public string? Title { get; init; } = null; }",
+    "expected": false
+  },
+  {
+    "id": "CS-002",
+    "form": "Значимый enum или default без подавления",
+    "path": "src/Example/Case16.cs",
+    "after": "public class Request { public int Title { get; init; } = default; }",
+    "expected": false
+  },
+  {
+    "id": "CS-002",
+    "form": "Подавление вне инициализатора свойства",
+    "path": "src/Example/Case17.cs",
+    "after": "class Route { void Execute() { var name = default(string)!; } void Send() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-002",
+    "form": "Вне выбранной области",
+    "path": "samples/Other/Case18.cs",
+    "after": "public class Request { public string Title { get; init; } = default!; }",
+    "expected": false
+  },
+  {
+    "id": "TEST-001",
+    "form": "BCL Task.Delay через using",
+    "path": "tests/Example/Case19.cs",
+    "after": "using System.Threading.Tasks; class Scenario { async System.Threading.Tasks.Task Run() { await Task.Delay(23); } }",
+    "expected": true
+  },
+  {
+    "id": "TEST-001",
+    "form": "Квалифицированный Task.Delay",
+    "path": "tests/Example/Case20.cs",
+    "after": "class Scenario { async System.Threading.Tasks.Task Run() { await global::System.Threading.Tasks.Task.Delay(20); } }",
+    "expected": true
+  },
+  {
+    "id": "TEST-001",
+    "form": "Псевдоним типа Task",
+    "path": "tests/Example/Case21.cs",
+    "after": "using TimerTask = System.Threading.Tasks.Task; class Scenario { async System.Threading.Tasks.Task Run() { await TimerTask.Delay(18); } }",
+    "expected": true
+  },
+  {
+    "id": "TEST-001",
+    "form": "Thread.Sleep в тесте",
+    "path": "tests/Example/Case22.cs",
+    "after": "class Scenario { async System.Threading.Tasks.Task Run() { System.Threading.Thread.Sleep(8); } }",
+    "expected": true
+  },
+  {
+    "id": "TEST-001",
+    "form": "Статический импорт",
+    "path": "tests/Example/Case23.cs",
+    "after": "using static System.Threading.Tasks.Task; class Scenario { async System.Threading.Tasks.Task Run() { await Delay(19); } }",
+    "expected": true
+  },
+  {
+    "id": "TEST-001",
+    "form": "Изменился только аргумент многострочного вызова",
+    "path": "tests/Example/Case24.cs",
+    "after": "using System.Threading.Tasks;\nclass Scenario { async Task Run() {\n await Task.Delay(\n    20);\n}}",
+    "expected": true,
+    "before": "using System.Threading.Tasks;\nclass Scenario { async Task Run() {\n await Task.Delay(\n    10);\n}}",
+    "line": 4
+  },
+  {
+    "id": "TEST-001",
+    "form": "Похожий локальный API",
+    "path": "tests/Example/Case25.cs",
+    "after": "class Scenario { async System.Threading.Tasks.Task Run() { await Timer.Delay(20); } } class Timer { public static System.Threading.Tasks.Task Delay(int value) => System.Threading.Tasks.Task.CompletedTask; }",
+    "expected": false
+  },
+  {
+    "id": "TEST-001",
+    "form": "Задержка в production",
+    "path": "src/Example/Case26.cs",
+    "after": "class Scenario { async System.Threading.Tasks.Task Run() { await System.Threading.Tasks.Task.Delay(20); } }",
+    "expected": false
+  },
+  {
+    "id": "TEST-001",
+    "form": "Управляемый источник в тесте",
+    "path": "tests/Example/Case27.cs",
+    "after": "class Scenario { async System.Threading.Tasks.Task Run() { await clock.AdvanceAsync(); } }",
+    "expected": false
+  },
+  {
+    "id": "TEST-001",
+    "form": "Задержка только в комментарии",
+    "path": "tests/Example/Case28.cs",
+    "after": "class Scenario { async System.Threading.Tasks.Task Run() { // await System.Threading.Tasks.Task.Delay(20);\n } }",
+    "expected": false
+  },
+  {
+    "id": "TEST-002",
+    "form": "NUnit Ignore с явным namespace",
+    "path": "tests/Example/Case29.cs",
+    "after": "[global::NUnit.Framework.Ignore(\"fixture is under repair\")] class Scenario { void Run() {} }",
+    "expected": true
+  },
+  {
+    "id": "TEST-002",
+    "form": "NUnit Explicit через using",
+    "path": "tests/Example/Case30.cs",
+    "after": "using NUnit.Framework; [Explicit(\"manual coverage\")] class Scenario { void Run() {} }",
+    "expected": true
+  },
+  {
+    "id": "TEST-002",
+    "form": "Псевдоним NUnit-атрибута",
+    "path": "tests/Example/Case31.cs",
+    "after": "using SkipCase = NUnit.Framework.IgnoreAttribute; [SkipCase(\"reason\")] class Scenario { void Run() {} }",
+    "expected": true
+  },
+  {
+    "id": "TEST-002",
+    "form": "Одноимённый атрибут другого namespace",
+    "path": "tests/Example/Case32.cs",
+    "after": "[Example.Ignore(\"reason\")] class Scenario { void Run() {} }",
+    "expected": false
+  },
+  {
+    "id": "TEST-002",
+    "form": "Затенение NUnit атрибута локальным типом",
+    "path": "tests/Example/Case33.cs",
+    "after": "using NUnit.Framework; [Ignore(\"example\")] class Scenario { void Run() {} } class IgnoreAttribute(string value) : System.Attribute {}",
+    "expected": false
+  },
+  {
+    "id": "TEST-002",
+    "form": "NUnit-атрибут вне тестовой области",
+    "path": "src/Example/Case34.cs",
+    "after": "[NUnit.Framework.Ignore(\"outside tests\")] class Scenario { void Run() {} }",
+    "expected": false
+  },
+  {
+    "id": "TEST-003",
+    "form": "Неконкурентный NUnit-тест с using",
+    "path": "tests/Example/Case35.cs",
+    "after": "using NUnit.Framework; [NonParallelizable] class Scenario { void Run() {} }",
+    "expected": true
+  },
+  {
+    "id": "TEST-003",
+    "form": "Квалифицированный атрибут",
+    "path": "tests/Example/Case36.cs",
+    "after": "[NUnit.Framework.NonParallelizableAttribute] class Scenario { void Run() {} }",
+    "expected": true
+  },
+  {
+    "id": "TEST-003",
+    "form": "Сборочный уровень",
+    "path": "tests/Example/Case37.cs",
+    "after": "using NUnit.Framework; [assembly: NonParallelizable] class Scenario {}",
+    "expected": true
+  },
+  {
+    "id": "TEST-003",
+    "form": "Символ похожего атрибута без NUnit",
+    "path": "tests/Example/Case38.cs",
+    "after": "[NonParallelizable] class Scenario { void Run() {} }",
+    "expected": false
+  },
+  {
+    "id": "TEST-003",
+    "form": "Разрешённый параллельный тест",
+    "path": "tests/Example/Case39.cs",
+    "after": "[NUnit.Framework.Parallelizable] class Scenario { void Run() {} }",
+    "expected": false
+  },
+  {
+    "id": "TEST-003",
+    "form": "Правка кода под прежним атрибутом",
+    "path": "tests/Example/Case40.cs",
+    "after": "using NUnit.Framework;\n[NonParallelizable]\nclass Scenario { int Value = 20; }",
+    "expected": false,
+    "before": "using NUnit.Framework;\n[NonParallelizable]\nclass Scenario { int Value = 1; }"
+  },
+  {
+    "id": "SQL-001",
+    "form": "UTF-8 BOM у нового скрипта",
+    "path": "db/migrations/New.sql",
+    "after": "﻿SELECT 1;\n",
+    "expected": true
+  },
+  {
+    "id": "SQL-001",
+    "form": "UTF-8 BOM добавлена при изменении скрипта",
+    "path": "db/migrations/Updated.sql",
+    "after": "﻿SELECT 2;\n",
+    "expected": true,
+    "before": "SELECT 1;\n"
+  },
+  {
+    "id": "SQL-001",
+    "form": "Изменение скрипта без BOM",
+    "path": "db/migrations/Plain.sql",
+    "after": "SELECT 2;\n",
+    "expected": false,
+    "before": "SELECT 1;\n"
+  },
+  {
+    "id": "SQL-001",
+    "form": "В скрипте уже была BOM",
+    "path": "db/migrations/Legacy.sql",
+    "after": "﻿SELECT 2;\n",
+    "expected": false,
+    "before": "﻿SELECT 1;\n"
+  },
+  {
+    "id": "SQL-001",
+    "form": "SQL вне явно указанной области",
+    "path": "src/Example/Report.sql",
+    "after": "﻿SELECT 1;\n",
+    "expected": false
+  }
+]

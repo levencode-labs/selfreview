@@ -19,6 +19,8 @@ CLI и адаптер ESLint.
 
 Готовый набор фронтенд-проверок, навык и матрица восстанавливаются из клона. [Frontend Conventions](packs/frontend-conventions/README.ru.md)
 
+Для C# и SQL есть отдельный набор проверок Git-диффа. [Backend Conventions](packs/backend-conventions/README.ru.md)
+
 ## Зачем нужен проект
 
 На ревью повторяются требования, которые зависят от конкретного проекта:

@@ -21,6 +21,8 @@ General best-practice checks remain advisory and yield to approved conventions.
 
 The standalone frontend pack can be rebuilt and restored from a clone. [Frontend Conventions](packs/frontend-conventions/README.md)
 
+The backend pack reviews C# and SQL against a selected Git diff. [Backend Conventions](packs/backend-conventions/README.md)
+
 ## Why this exists
 
 Review feedback often repeats the same project-specific expectations: which APIs

@@ -1,0 +1,13 @@
+{
+  "include": [
+    "src/Example",
+    "tests/Example",
+    "db/migrations"
+  ],
+  "test": [
+    "tests/Example"
+  ],
+  "sqlUtf8": [
+    "db/migrations"
+  ]
+}
