@@ -19,6 +19,8 @@ General best-practice checks remain advisory and yield to approved conventions.
 [Verification report](VERIFICATION.md) ·
 [GitHub Actions](https://github.com/levencode-labs/selfreview/actions/workflows/ci.yml)
 
+The standalone frontend pack can be rebuilt and restored from a clone. [Frontend Conventions](packs/frontend-conventions/README.md)
+
 ## Why this exists
 
 Review feedback often repeats the same project-specific expectations: which APIs

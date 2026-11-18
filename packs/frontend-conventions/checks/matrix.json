@@ -1,0 +1,1800 @@
+[
+  {
+    "rule": "TS-2",
+    "form": "Строгое сравнение boolean",
+    "path": "mode.ts",
+    "source": "const canEdit = (enabled: boolean) => enabled === false;",
+    "expected": true,
+    "suggestion": "!enabled"
+  },
+  {
+    "rule": "TS-2",
+    "form": "Строгое сравнение boolean · контроль",
+    "path": "mode.ts",
+    "source": "const canEdit = (enabled: boolean | null) => enabled === false;",
+    "expected": false
+  },
+  {
+    "rule": "TS-3",
+    "form": "Глобальная консоль",
+    "path": "mode.ts",
+    "source": "console.log('demo');",
+    "expected": true
+  },
+  {
+    "rule": "TS-3",
+    "form": "Глобальная консоль · контроль",
+    "path": "mode.ts",
+    "source": "const console = {log: saveAudit}; console.log('audit');",
+    "expected": false
+  },
+  {
+    "rule": "TS-4",
+    "form": "Удаление поля",
+    "path": "mode.ts",
+    "source": "delete row[key];",
+    "expected": true
+  },
+  {
+    "rule": "TS-4",
+    "form": "Удаление поля · контроль",
+    "path": "mode.ts",
+    "source": "const { ignored, ...rest } = row;",
+    "expected": false
+  },
+  {
+    "rule": "TS-6",
+    "form": "Строковое или числовое enum",
+    "path": "mode.ts",
+    "source": "enum Mode { Open = 1 }",
+    "expected": true
+  },
+  {
+    "rule": "TS-6",
+    "form": "Строковое или числовое enum · контроль",
+    "path": "mode.ts",
+    "source": "enum Mode { Open = 'open' }",
+    "expected": false
+  },
+  {
+    "rule": "REACT-1",
+    "form": "Классовый компонент",
+    "source": "class Catalog extends React.PureComponent { render() { return null; } }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-1",
+    "form": "Классовый компонент · контроль",
+    "source": "function Catalog() { return <main/>; }",
+    "expected": false
+  },
+  {
+    "rule": "REACT-2",
+    "form": "memo без props",
+    "source": "const Catalog = () => <main/>; export default memo(Catalog);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-2",
+    "form": "memo без props · контроль",
+    "source": "const Catalog = (props: Props) => <main/>; export default memo(Catalog);",
+    "expected": false
+  },
+  {
+    "rule": "REACT-3",
+    "form": "Фрагмент как корень",
+    "source": "const Catalog = () => <><i/><b/></>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-3",
+    "form": "Фрагмент как корень · контроль",
+    "source": "const Catalog = () => <main><><i/><b/></></main>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-4",
+    "form": "Зависимость от объекта маршрута",
+    "source": "useEffect(() => load(routeMatch.params.id), [routeMatch]);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-4",
+    "form": "Зависимость от объекта маршрута · контроль",
+    "source": "useEffect(() => load(routeMatch.params.id), [routeMatch.params.id]);",
+    "expected": false
+  },
+  {
+    "rule": "REACT-7",
+    "form": "Inline-обработчик",
+    "source": "const Catalog = () => <button onClick={() => save()}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-7",
+    "form": "Inline-обработчик · контроль",
+    "source": "const Catalog = () => <button onClick={handleSave}/>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-8",
+    "form": "Конструктор только с super",
+    "source": "class Catalog extends React.Component { constructor(props: Props) { super(props); } render() { return null; } }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-8",
+    "form": "Конструктор только с super · контроль",
+    "source": "class Catalog extends React.Component { render() { return null; } }",
+    "expected": false
+  },
+  {
+    "rule": "REACT-9",
+    "form": "Дочерняя ViewModel",
+    "source": "import {useSelector} from 'react-redux'; import {getRowViewModel} from './components/Row/selectors/viewSelectors'; useSelector(getRowViewModel);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-9",
+    "form": "Дочерняя ViewModel · контроль",
+    "source": "import {useSelector} from 'react-redux'; import {getCatalogViewModel} from './selectors/viewSelectors'; useSelector(getCatalogViewModel);",
+    "expected": false
+  },
+  {
+    "rule": "REACT-10",
+    "form": "Фабрика вызывает createSelector",
+    "source": "import {useSelector} from 'react-redux'; import {createSelector} from 'reselect'; const makeView = () => createSelector(root, state => state); const Catalog = () => <main>{useSelector(makeView())}</main>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-10",
+    "form": "Фабрика вызывает createSelector · контроль",
+    "source": "import {createSelector} from 'reselect'; const makeView = () => createSelector(root, state => state); import {useSelectorBuilder} from '@example/app-ui'; const Catalog = () => <main>{useSelectorBuilder(makeView)}</main>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-11",
+    "form": "Селектор другой фичи",
+    "source": "import {useSelector} from 'react-redux'; import {getCartViewModel} from '../Cart/selectors/viewSelectors'; useSelector(getCartViewModel);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-11",
+    "form": "Селектор другой фичи · контроль",
+    "source": "import {useSelector} from 'react-redux'; import {getCatalogViewModel} from './selectors/viewSelectors'; useSelector(getCatalogViewModel);",
+    "expected": false
+  },
+  {
+    "rule": "REACT-12",
+    "form": "Bound action передан в onClick",
+    "source": "const actions = useActions(listActions); const Catalog = () => <button onClick={actions.save}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-12",
+    "form": "Bound action передан в onClick · контроль",
+    "source": "const actions = useActions(listActions); const Catalog = () => <button onClick={handleSave}/>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-13",
+    "form": "Feature flags в компоненте",
+    "source": "import * as config from '../../config/featureFlags';",
+    "expected": true
+  },
+  {
+    "rule": "REACT-13",
+    "form": "Feature flags в компоненте · контроль",
+    "source": "import {getCatalogViewModel} from './selectors/viewSelectors';",
+    "expected": false
+  },
+  {
+    "rule": "REACT-14",
+    "form": "Форма значения useActions",
+    "source": "const bindedActions = useActions({...listActions});",
+    "expected": true
+  },
+  {
+    "rule": "REACT-14",
+    "form": "Форма значения useActions · контроль",
+    "source": "const bindedActions = useActions({...listActions,...saveActions});",
+    "expected": false
+  },
+  {
+    "rule": "REACT-15",
+    "form": "Аннотация FC",
+    "source": "import {FC} from 'react'; const Catalog: FC = () => <div/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-15",
+    "form": "Аннотация FC · контроль",
+    "source": "const Catalog = () => <div/>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-16",
+    "form": "Число подписок для ViewModel",
+    "source": "import {useSelector} from 'react-redux'; const Catalog = () => { const rows = useSelector(getRows); const filter = useSelector(getFilter); return <Panel rows={rows} filter={filter}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "REACT-16",
+    "form": "Число подписок для ViewModel · контроль",
+    "source": "import {useSelector} from 'react-redux'; import {getCatalogViewModel} from './selectors/viewSelectors'; const Catalog = () => <div>{useSelector(getCatalogViewModel).title}</div>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-17",
+    "form": "Раздельные использования useActions",
+    "source": "import {useActions} from '@example/app-ui/hooks'; const Catalog = () => { const list = useActions(listActions); const save = useActions(saveActions); return <Panel list={list} save={save}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "REACT-17",
+    "form": "Раздельные использования useActions · контроль",
+    "source": "import {useActions} from '@example/app-ui/hooks'; const Catalog = () => { const bindedActions = useActions({...listActions,...saveActions}); return <Panel actions={bindedActions}/>; };",
+    "expected": false
+  },
+  {
+    "rule": "REACT-18",
+    "form": "Имя результата useActions",
+    "source": "import {useActions} from '@example/app-ui/hooks'; const Catalog = () => { const actions = useActions(listActions); return <Panel actions={actions}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "REACT-18",
+    "form": "Имя результата useActions · контроль",
+    "source": "import {useActions} from '@example/app-ui/hooks'; const Catalog = () => { const bindedActions = useActions(listActions); return <Panel actions={bindedActions}/>; };",
+    "expected": false
+  },
+  {
+    "rule": "REACT-19",
+    "form": "Суффикс фабрики обработчика",
+    "source": "const Catalog = () => { const build = id => value => save(id, value); return <Panel onChange={build(id)}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "REACT-19",
+    "form": "Суффикс фабрики обработчика · контроль",
+    "source": "const Catalog = () => { const saveHandleCreator = id => value => save(id, value); return <Panel onChange={saveHandleCreator(id)}/>; };",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-1",
+    "form": "Аннотация результата сагового селектора",
+    "path": "components/Catalog/selectors/sagaSelectors.ts",
+    "source": "export const getQuery = (state: State) => ({page: state.page});",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-1",
+    "form": "Аннотация результата сагового селектора · контроль",
+    "path": "components/Catalog/selectors/sagaSelectors.ts",
+    "source": "export const getQuery = (state: State): Query => ({page: state.page});",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-2",
+    "form": "WithModule для getRoot",
+    "path": "components/Catalog/selectors/baseSelectors.ts",
+    "source": "export const getRoot = (state: any) => state.catalog;",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-2",
+    "form": "WithModule для getRoot · контроль",
+    "path": "components/Catalog/selectors/baseSelectors.ts",
+    "source": "export const getRoot = (state: WithCatalog) => state.catalog;",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-4",
+    "form": "Шаблонное имя createAction",
+    "path": "components/Catalog/slice.ts",
+    "source": "createAction(`catalog/${name}`);",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-4",
+    "form": "Шаблонное имя createAction · контроль",
+    "path": "components/Catalog/slice.ts",
+    "source": "createAction('catalog/load');",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-5",
+    "form": "Примитив или объект в PayloadAction",
+    "path": "components/Catalog/slice.ts",
+    "source": "type Save = PayloadAction<string>;",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-5",
+    "form": "Примитив или объект в PayloadAction · контроль",
+    "path": "components/Catalog/slice.ts",
+    "source": "type Save = PayloadAction<{ label: string }>;",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-6",
+    "form": "Триггер и именованные фазы",
+    "path": "components/Catalog/slice.ts",
+    "source": "createSlice({ name:'catalog', initialState:{}, reducers:{fetchRows(){}} });",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-6",
+    "form": "Триггер и именованные фазы · контроль",
+    "path": "components/Catalog/slice.ts",
+    "source": "createSlice({ name:'catalog', initialState:{}, reducers:{fetchRows(){}, fetchRowsBegin(){}, fetchRowsSuccess(){}, fetchRowsError(){}} });",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-9",
+    "form": "API вызывается из эффекта",
+    "path": "components/Catalog/sagas.ts",
+    "source": "import {CatalogApi} from './CatalogApi'; function* run(){ yield call(CatalogApi.search, query); }",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-9",
+    "form": "API вызывается из эффекта · контроль",
+    "path": "components/Catalog/sagas.ts",
+    "source": "import {CatalogApi} from './CatalogApi'; function* run(){ yield fetchData({ action: () => CatalogApi.search(query) }); }",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-10",
+    "form": "Выполняемый yield внутри if",
+    "path": "components/Catalog/sagas.ts",
+    "source": "function* run(){ if (yield select(isReady)) { save(); } }",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-10",
+    "form": "Выполняемый yield внутри if · контроль",
+    "path": "components/Catalog/sagas.ts",
+    "source": "function* run(){ const ready = yield select(isReady); if (ready) { save(); } }",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-11",
+    "form": "Источник Redux-типа",
+    "path": "components/Catalog/slice.ts",
+    "source": "import type {Action} from 'redux';",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-11",
+    "form": "Источник Redux-типа · контроль",
+    "path": "components/Catalog/slice.ts",
+    "source": "import type {Action} from '@reduxjs/toolkit';",
+    "expected": false
+  },
+  {
+    "rule": "CSS-1",
+    "form": "Локальный класс",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": " .item-row { display: grid; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-1",
+    "form": "Локальный класс · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": " .itemRow { display: grid; }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-2",
+    "form": "Положение custom property",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ":root {\n --tone: currentColor;\n}",
+    "expected": true
+  },
+  {
+    "rule": "CSS-2",
+    "form": "Положение custom property · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row {\n --tone: currentColor;\n}",
+    "expected": false
+  },
+  {
+    "rule": "CSS-3",
+    "form": "Префикс глобального класса",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ":global(.overlay) { display: grid; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-3",
+    "form": "Префикс глобального класса · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ":global(.global_overlay) { display: grid; }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-4",
+    "form": "Размер вне сетки",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { padding: 6px; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-4",
+    "form": "Размер вне сетки · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { padding: 8px; }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-5",
+    "form": "Заданный литералом цвет",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { color: #abc; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-5",
+    "form": "Заданный литералом цвет · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { color: var(--color-text); }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-6",
+    "form": "Напрямую заданный font-size",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { font-size: 12px; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-6",
+    "form": "Напрямую заданный font-size · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { display: grid; }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-7",
+    "form": "Тестовый атрибут как CSS-селектор",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row [data-tid='label'] { padding: 4px; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-7",
+    "form": "Тестовый атрибут как CSS-селектор · контроль",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row .label { padding: 4px; }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-8",
+    "form": "Объект в style",
+    "source": "const Catalog = () => <div style={{padding: 4}}/>;",
+    "expected": true
+  },
+  {
+    "rule": "CSS-8",
+    "form": "Объект в style · контроль",
+    "source": "const Catalog = () => <div className={styles.root}/>;",
+    "expected": false
+  },
+  {
+    "rule": "CSS-9",
+    "form": "Имя модуля в папке компонента",
+    "source": "import styles from './styles.module.css';",
+    "expected": true
+  },
+  {
+    "rule": "CSS-9",
+    "form": "Имя модуля в папке компонента · контроль",
+    "source": "import styles from './Catalog.module.css';",
+    "expected": false
+  },
+  {
+    "rule": "RUI-1",
+    "form": "Корневой импорт иконок",
+    "source": "import {IconAdd16} from '@example/icons';",
+    "expected": true
+  },
+  {
+    "rule": "RUI-1",
+    "form": "Корневой импорт иконок · контроль",
+    "source": "import {type IconProps} from '@example/icons'; import {IconAdd16} from '@example/icons/IconAdd16';",
+    "expected": false
+  },
+  {
+    "rule": "RUI-2",
+    "form": "Самодельный базовый контрол",
+    "path": "components/Checkbox/Checkbox.tsx",
+    "source": "export const Checkbox = () => <input type='checkbox'/>;",
+    "expected": true
+  },
+  {
+    "rule": "RUI-2",
+    "form": "Самодельный базовый контрол · контроль",
+    "path": "components/Checkbox/Checkbox.tsx",
+    "source": "export {Checkbox} from '@example/react-ui';",
+    "expected": false
+  },
+  {
+    "rule": "RUI-3",
+    "form": "Inline SVG в представлении",
+    "source": "const Catalog = () => <svg><path d='M0,0'/></svg>;",
+    "expected": true
+  },
+  {
+    "rule": "RUI-3",
+    "form": "Inline SVG в представлении · контроль",
+    "source": "const Catalog = () => <IconAdd16/>;",
+    "expected": false
+  },
+  {
+    "rule": "RUI-4",
+    "form": "Источник базового контрола",
+    "source": "import {Button} from '@example/app-ui/components/Button';",
+    "expected": true
+  },
+  {
+    "rule": "RUI-4",
+    "form": "Источник базового контрола · контроль",
+    "source": "import {Button} from '@example/react-ui';",
+    "expected": false
+  },
+  {
+    "rule": "RUI-5",
+    "form": "Gapped в выбранном воркспейсе",
+    "source": "import {Gapped as Layout} from '@example/react-ui';",
+    "expected": true
+  },
+  {
+    "rule": "RUI-5",
+    "form": "Gapped в выбранном воркспейсе · контроль",
+    "source": "import {Button} from '@example/react-ui';",
+    "expected": false
+  },
+  {
+    "rule": "EB-1",
+    "form": "Оборачивание ErrorBoundary",
+    "source": "const Wrapped = connect(mapState)(ErrorBoundary);",
+    "expected": true
+  },
+  {
+    "rule": "EB-1",
+    "form": "Оборачивание ErrorBoundary · контроль",
+    "source": "const Wrapped = errorBoundary(Catalog);",
+    "expected": false
+  },
+  {
+    "rule": "URL-1",
+    "form": "Браузерный fetch",
+    "path": "mode.ts",
+    "source": "fetch('/demo');",
+    "expected": true
+  },
+  {
+    "rule": "URL-1",
+    "form": "Браузерный fetch · контроль",
+    "path": "mode.ts",
+    "source": "DemoClient.search(query);",
+    "expected": false
+  },
+  {
+    "rule": "URL-2",
+    "form": "Объект routeMatch в props",
+    "source": "const Catalog = () => <Panel routeMatch={routeMatch}/>;",
+    "expected": true
+  },
+  {
+    "rule": "URL-2",
+    "form": "Объект routeMatch в props · контроль",
+    "source": "const Catalog = () => <Panel itemId={itemId}/>;",
+    "expected": false
+  },
+  {
+    "rule": "FS-1",
+    "form": "Два объявленных компонента",
+    "source": "export const Catalog = () => <Row/>;\nexport const Row = () => <tr/>;",
+    "expected": true
+  },
+  {
+    "rule": "FS-1",
+    "form": "Два объявленных компонента · контроль",
+    "source": "export const Catalog = () => <main/>;",
+    "expected": false
+  },
+  {
+    "rule": "FS-2",
+    "form": "Глубина компонентов",
+    "path": "components/Catalog/components/Panel/components/List/components/Row/Row.tsx",
+    "source": "export const Row = () => <tr/>;",
+    "expected": true
+  },
+  {
+    "rule": "FS-2",
+    "form": "Глубина компонентов · контроль",
+    "path": "components/Catalog/components/List/components/Row/Row.tsx",
+    "source": "export const Row = () => <tr/>;",
+    "expected": false
+  },
+  {
+    "rule": "FS-4",
+    "form": "Размер вложенного компонента",
+    "path": "components/Catalog/components/Panel/Panel.tsx",
+    "source": "export const Panel = () => {\n    useItem(0);\n    useItem(1);\n    useItem(2);\n    useItem(3);\n    useItem(4);\n    useItem(5);\n    useItem(6);\n    useItem(7);\n    useItem(8);\n    useItem(9);\n    useItem(10);\n    useItem(11);\n    useItem(12);\n    useItem(13);\n    useItem(14);\n    useItem(15);\n    useItem(16);\n    useItem(17);\n    useItem(18);\n    useItem(19);\n    useItem(20);\n    useItem(21);\n    useItem(22);\n    useItem(23);\n    useItem(24);\n    useItem(25);\n    useItem(26);\n    useItem(27);\n    useItem(28);\n    useItem(29);\n    useItem(30);\n    useItem(31);\n    useItem(32);\n    useItem(33);\n    useItem(34);\n    useItem(35);\n    useItem(36);\n    useItem(37);\n    useItem(38);\n    useItem(39);\n    useItem(40);\n    useItem(41);\n    useItem(42);\n    useItem(43);\n    useItem(44);\n    useItem(45);\n    useItem(46);\n    useItem(47);\n    useItem(48);\n    useItem(49);\n    useItem(50);\n    useItem(51);\n    useItem(52);\n    useItem(53);\n    useItem(54);\n    useItem(55);\n    useItem(56);\n    useItem(57);\n    useItem(58);\n    useItem(59);\n    useItem(60);\n    useItem(61);\n    useItem(62);\n    useItem(63);\n    useItem(64);\n    useItem(65);\n    useItem(66);\n    useItem(67);\n    useItem(68);\n    useItem(69);\n    useItem(70);\n    useItem(71);\n    useItem(72);\n    useItem(73);\n    useItem(74);\n    useItem(75);\n    useItem(76);\n    useItem(77);\n    useItem(78);\n    useItem(79);\n    useItem(80);\n    useItem(81);\n    useItem(82);\n    useItem(83);\n    useItem(84);\n    useItem(85);\n    useItem(86);\n    useItem(87);\n    useItem(88);\n    useItem(89);\n    useItem(90);\n    useItem(91);\n    useItem(92);\n    useItem(93);\n    useItem(94);\n    useItem(95);\n    useItem(96);\n    useItem(97);\n    useItem(98);\n    useItem(99);\n    useItem(100);\n    useItem(101);\n    useItem(102);\n    useItem(103);\n    useItem(104);\n    useItem(105);\n    useItem(106);\n    useItem(107);\n    useItem(108);\n    useItem(109);\n    useItem(110);\n    useItem(111);\n    useItem(112);\n    useItem(113);\n    useItem(114);\n    useItem(115);\n    useItem(116);\n    useItem(117);\n    useItem(118);\n    useItem(119);\n    useItem(120);\n    useItem(121);\n    useItem(122);\n    useItem(123);\n    useItem(124);\n    useItem(125);\n    useItem(126);\n    useItem(127);\n    useItem(128);\n    useItem(129);\n    useItem(130);\n    useItem(131);\n    useItem(132);\n    useItem(133);\n    useItem(134);\n    useItem(135);\n    useItem(136);\n    useItem(137);\n    useItem(138);\n    useItem(139);\n    useItem(140);\n    useItem(141);\n    useItem(142);\n    useItem(143);\n    useItem(144);\n    useItem(145);\n    useItem(146);\n    useItem(147);\n    useItem(148);\n    useItem(149);\n    useItem(150);\n    useItem(151);\n    useItem(152);\n    useItem(153);\n    useItem(154);\n    useItem(155);\n    useItem(156);\n    useItem(157);\n    useItem(158);\n    useItem(159);\n    useItem(160);\n    useItem(161);\n    useItem(162);\n    useItem(163);\n    useItem(164);\n    useItem(165);\n    useItem(166);\n    useItem(167);\n    useItem(168);\n    useItem(169);\n    useItem(170);\n    useItem(171);\n    useItem(172);\n    useItem(173);\n    useItem(174);\n    useItem(175);\n    useItem(176);\n    useItem(177);\n    useItem(178);\n    useItem(179);\n    useItem(180);\n    useItem(181);\n    useItem(182);\n    useItem(183);\n    useItem(184);\n    useItem(185);\n    useItem(186);\n    useItem(187);\n    useItem(188);\n    useItem(189);\n    useItem(190);\n    useItem(191);\n    useItem(192);\n    useItem(193);\n    useItem(194);\n    useItem(195);\n    useItem(196);\n    useItem(197);\n    useItem(198);\n    useItem(199);\n    useItem(200);\n    useItem(201);\n    useItem(202);\n    useItem(203);\n    useItem(204);\n    useItem(205);\n    useItem(206);\n    useItem(207);\n    useItem(208);\n    useItem(209);\n    useItem(210);\n    useItem(211);\n    useItem(212);\n    useItem(213);\n    useItem(214);\n    useItem(215);\n    useItem(216);\n    useItem(217);\n    useItem(218);\n    useItem(219);\n    useItem(220);\n    useItem(221);\n    useItem(222);\n    useItem(223);\n    useItem(224);\n    useItem(225);\n    useItem(226);\n    useItem(227);\n    useItem(228);\n    useItem(229);\n    useItem(230);\n    useItem(231);\n    useItem(232);\n    useItem(233);\n    useItem(234);\n    useItem(235);\n    useItem(236);\n    useItem(237);\n    useItem(238);\n    useItem(239);\n    useItem(240);\n    useItem(241);\n    useItem(242);\n    useItem(243);\n    useItem(244);\n    useItem(245);\n    useItem(246);\n    useItem(247);\n    useItem(248);\n    useItem(249);\n    useItem(250);\n    useItem(251);\n    useItem(252);\n    useItem(253);\n    useItem(254);\n    useItem(255);\n    useItem(256);\n    useItem(257);\n    useItem(258);\n    useItem(259);\n    return <div/>;\n};",
+    "expected": true
+  },
+  {
+    "rule": "FS-4",
+    "form": "Размер вложенного компонента · контроль",
+    "path": "components/Catalog/components/Panel/Panel.tsx",
+    "source": "export const Panel = () => <div/>;",
+    "expected": false
+  },
+  {
+    "rule": "FS-5",
+    "form": "Именованная сущность",
+    "path": "helpers/Normalize.ts",
+    "source": "export const trim = value => value.trim();",
+    "expected": true
+  },
+  {
+    "rule": "FS-5",
+    "form": "Именованная сущность · контроль",
+    "path": "helpers/Normalize.ts",
+    "source": "export function Normalize(value: string) { return value.trim(); }",
+    "expected": false
+  },
+  {
+    "rule": "FS-6",
+    "form": "Суффикс ViewModel",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getCatalogView = state => state.catalog;",
+    "expected": true
+  },
+  {
+    "rule": "FS-6",
+    "form": "Суффикс ViewModel · контроль",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getCatalogViewModel = state => state.catalog;",
+    "expected": false
+  },
+  {
+    "rule": "FS-7",
+    "form": "Вынесенная константа",
+    "source": "export const ROW_LIMIT = 24;",
+    "expected": true
+  },
+  {
+    "rule": "FS-7",
+    "form": "Вынесенная константа · контроль",
+    "path": "components/Catalog/constants.ts",
+    "source": "export const ROW_LIMIT = 24;",
+    "expected": false
+  },
+  {
+    "rule": "FS-8",
+    "form": "Named export",
+    "path": "features/catalog.ts",
+    "source": "export default Catalog;",
+    "expected": true
+  },
+  {
+    "rule": "FS-8",
+    "form": "Named export · контроль",
+    "path": "features/catalog.ts",
+    "source": "export { Catalog };",
+    "expected": false
+  },
+  {
+    "rule": "FS-12",
+    "form": "Именованная группа Route",
+    "source": "const Catalog = () => <div><Route path='/list'/><Route path='/view'/></div>;",
+    "expected": true
+  },
+  {
+    "rule": "FS-12",
+    "form": "Именованная группа Route · контроль",
+    "source": "const CatalogRoutes = () => <div><Route path='/list'/><Route path='/view'/></div>;",
+    "expected": false
+  },
+  {
+    "rule": "FS-13",
+    "form": "Имя файла слайса",
+    "path": "components/Catalog/slices/load.ts",
+    "source": "export const load = createSlice(options);",
+    "expected": true
+  },
+  {
+    "rule": "FS-13",
+    "form": "Имя файла слайса · контроль",
+    "path": "components/Catalog/slices/loadSlice.ts",
+    "source": "export const load = createSlice(options);",
+    "expected": false
+  },
+  {
+    "rule": "FS-14",
+    "form": "Расположение тестового файла",
+    "path": "components/Catalog/catalog.test.ts",
+    "source": "it('открывает список', () => {});",
+    "expected": true
+  },
+  {
+    "rule": "FS-14",
+    "form": "Расположение тестового файла · контроль",
+    "path": "components/Catalog/__tests__/catalog.test.ts",
+    "source": "it('открывает список', () => {});",
+    "expected": false
+  },
+  {
+    "rule": "FS-15",
+    "form": "Проверка соседнего теста helper",
+    "path": "components/Catalog/helpers/normalize.ts",
+    "source": "export const normalize = value => value.trim();",
+    "expected": true
+  },
+  {
+    "rule": "FS-15",
+    "form": "Проверка соседнего теста helper · контроль",
+    "path": "components/Catalog/helpers/normalize.ts",
+    "source": "export const normalize = value => value.trim();",
+    "expected": false,
+    "related": {
+      "../__tests__/helpers/normalize.test.ts": "it('нормализует', () => {});"
+    }
+  },
+  {
+    "rule": "FS-16",
+    "form": "Выделенный хук размещён в hooks",
+    "path": "components/Catalog/useCatalog.ts",
+    "source": "export function useCatalog() { return useState(0); }",
+    "expected": true
+  },
+  {
+    "rule": "FS-16",
+    "form": "Выделенный хук размещён в hooks · контроль",
+    "path": "components/Catalog/hooks/useCatalog.ts",
+    "source": "export function useCatalog() { return useState(0); }",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-1",
+    "form": "Вложенность условий в JSX",
+    "source": "const Catalog = () => <div>{hasItems ? ready ? 'ready' : 'loading' : 'empty'}</div>;",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-1",
+    "form": "Вложенность условий в JSX · контроль",
+    "source": "const Catalog = () => <div>{hasItems ? label : 'empty'}</div>;",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-2",
+    "form": "Соседние базовые селекторы",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getCatalogViewModel = state => state.catalog;",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-2",
+    "form": "Соседние базовые селекторы · контроль",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getCatalogViewModel = state => state.catalog;",
+    "expected": false,
+    "related": {
+      "baseSelectors.ts": "export const getRoot = state => state.catalog;"
+    }
+  },
+  {
+    "rule": "MVVM-4",
+    "form": "Мемоизированный селектор для строк",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "const getRow = createSelector(root, rows => rows); const result = items.map(item => getRow(item));",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-4",
+    "form": "Мемоизированный селектор для строк · контроль",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "const makeGetRow = () => createSelector(root, rows => rows);",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-5",
+    "form": "Состояние фичи в Redux",
+    "source": "const Catalog = () => { const [opened, setOpened] = useState(false); return <Panel opened={opened}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-5",
+    "form": "Состояние фичи в Redux · контроль",
+    "source": "const Catalog = () => { const opened = useSelector(getOpened); return <Panel opened={opened}/>; };",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-7",
+    "form": "Композиция редьюсера",
+    "path": "components/Catalog/reducer.ts",
+    "source": "const reducer = reduceReducers((state, action) => ({...state, catalog: catalogReducer(state, action)}));",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-7",
+    "form": "Композиция редьюсера · контроль",
+    "path": "components/Catalog/reducer.ts",
+    "source": "const reducer = combineReducers({catalog: catalogReducer});",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-9",
+    "form": "View-селекторы на уровне фичи",
+    "path": "components/Catalog/components/Row/selectors/viewSelectors.ts",
+    "source": "export const getCatalogViewModel = state => state.catalog;",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-9",
+    "form": "View-селекторы на уровне фичи · контроль",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getCatalogViewModel = state => state.catalog;",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-10",
+    "form": "Файл createSelector",
+    "path": "components/Catalog/details.ts",
+    "source": "const getRows = createSelector(root, rows => rows);",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-10",
+    "form": "Файл createSelector · контроль",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "const getRows = createSelector(root, rows => rows);",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-11",
+    "form": "Проекция данных Redux",
+    "source": "import {useSelector} from 'react-redux'; const Catalog = () => { const rows = useSelector(getRows); const filtered = rows.filter(row => row.active); return <Panel rows={filtered}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-11",
+    "form": "Проекция данных Redux · контроль",
+    "source": "import {useSelector} from 'react-redux'; const Catalog = () => { const rows = useSelector(getRows); return <main>{rows.map(row => <Row row={row}/>)}</main>; };",
+    "expected": false
+  },
+  {
+    "rule": "MISC-1",
+    "form": "Прямой импорт библиотеки дат",
+    "path": "time.ts",
+    "source": "import dayjs from 'dayjs';",
+    "expected": true
+  },
+  {
+    "rule": "MISC-1",
+    "form": "Прямой импорт библиотеки дат · контроль",
+    "path": "time.ts",
+    "source": "import {Utc} from '@example/app-ui/libs/date';",
+    "expected": false
+  },
+  {
+    "rule": "MISC-3",
+    "form": "Выключенный тест",
+    "path": "__tests__/mode.test.ts",
+    "source": "// it('открывает список', () => {});",
+    "expected": true
+  },
+  {
+    "rule": "MISC-3",
+    "form": "Выключенный тест · контроль",
+    "path": "__tests__/mode.test.ts",
+    "source": "it.skip('открывает список', () => {});",
+    "expected": false
+  },
+  {
+    "rule": "MISC-4",
+    "form": "Контекстное имя helper",
+    "path": "components/Catalog/helpers.ts",
+    "source": "export const format = value => String(value);",
+    "expected": true
+  },
+  {
+    "rule": "MISC-4",
+    "form": "Контекстное имя helper · контроль",
+    "path": "components/Catalog/catalogHelpers.ts",
+    "source": "export const format = value => String(value);",
+    "expected": false
+  },
+  {
+    "rule": "MISC-8",
+    "form": "Реформат без изменения",
+    "path": "layout.ts",
+    "source": "export const opened  =  true;",
+    "expected": true,
+    "status": "modified",
+    "whitespaceOnly": true
+  },
+  {
+    "rule": "MISC-8",
+    "form": "Реформат без изменения · контроль",
+    "path": "layout.ts",
+    "source": "export const opened = false;",
+    "expected": false,
+    "status": "modified"
+  },
+  {
+    "rule": "MISC-12",
+    "form": "Тесты для логики фичи",
+    "path": "components/Catalog/slice.ts",
+    "source": "export const slice = createSlice(options);",
+    "expected": true
+  },
+  {
+    "rule": "MISC-12",
+    "form": "Тесты для логики фичи · контроль",
+    "path": "components/Catalog/slice.ts",
+    "source": "export const slice = createSlice(options);",
+    "expected": false,
+    "related": {
+      "__tests__/slice.test.ts": "it('обновляет строки', () => {});"
+    }
+  },
+  {
+    "rule": "MISC-14",
+    "form": "Отступы",
+    "path": "layout.ts",
+    "source": "function load() {\n  step(0);\n  step(1);\n  step(2);\n  step(3);\n  step(4);\n  step(5);\n  step(6);\n  step(7);\n  step(8);\n  step(9);\n}",
+    "expected": true
+  },
+  {
+    "rule": "MISC-14",
+    "form": "Отступы · контроль",
+    "path": "layout.ts",
+    "source": "function load() {\n    step(0);\n    step(1);\n    step(2);\n    step(3);\n    step(4);\n    step(5);\n    step(6);\n    step(7);\n    step(8);\n    step(9);\n}",
+    "expected": false
+  },
+  {
+    "rule": "MISC-15",
+    "form": "Магическая константа в арифметике",
+    "source": "setPage(page - 2);",
+    "expected": true
+  },
+  {
+    "rule": "MISC-15",
+    "form": "Магическая константа в арифметике · контроль",
+    "source": "setPage(page - 1);",
+    "expected": false
+  },
+  {
+    "rule": "MISC-16",
+    "form": "Литеральная конфигурация",
+    "source": "const rowLimit = 24;",
+    "expected": true
+  },
+  {
+    "rule": "MISC-16",
+    "form": "Литеральная конфигурация · контроль",
+    "source": "const rowLimit = selectLimit(state);",
+    "expected": false
+  },
+  {
+    "rule": "MISC-17",
+    "form": "Размер функции",
+    "source": "function prepareRows() {\n    useItem(0);\n    useItem(1);\n    useItem(2);\n    useItem(3);\n    useItem(4);\n    useItem(5);\n    useItem(6);\n    useItem(7);\n    useItem(8);\n    useItem(9);\n    useItem(10);\n    useItem(11);\n    useItem(12);\n    useItem(13);\n    useItem(14);\n    useItem(15);\n    useItem(16);\n    useItem(17);\n    useItem(18);\n    useItem(19);\n    useItem(20);\n    useItem(21);\n    useItem(22);\n    useItem(23);\n    useItem(24);\n    useItem(25);\n    useItem(26);\n    useItem(27);\n    useItem(28);\n    useItem(29);\n    useItem(30);\n    useItem(31);\n    useItem(32);\n    useItem(33);\n    useItem(34);\n    useItem(35);\n    useItem(36);\n    useItem(37);\n    useItem(38);\n    useItem(39);\n    useItem(40);\n    useItem(41);\n    useItem(42);\n    useItem(43);\n    useItem(44);\n    useItem(45);\n    useItem(46);\n    useItem(47);\n    useItem(48);\n    useItem(49);\n    useItem(50);\n    useItem(51);\n    useItem(52);\n    useItem(53);\n    useItem(54);\n    useItem(55);\n    useItem(56);\n    useItem(57);\n    useItem(58);\n    useItem(59);\n    useItem(60);\n    useItem(61);\n    useItem(62);\n    useItem(63);\n    useItem(64);\n    useItem(65);\n    useItem(66);\n    useItem(67);\n    useItem(68);\n    useItem(69);\n}",
+    "expected": true
+  },
+  {
+    "rule": "MISC-17",
+    "form": "Размер функции · контроль",
+    "source": "function prepareRows() { return mapRows(); }",
+    "expected": false
+  },
+  {
+    "rule": "MISC-18",
+    "form": "Имена переменных и параметров",
+    "source": "const x = 24;",
+    "expected": true
+  },
+  {
+    "rule": "MISC-18",
+    "form": "Имена переменных и параметров · контроль",
+    "source": "const button = <button onClick={e => e.currentTarget}/>;",
+    "expected": false
+  },
+  {
+    "rule": "MISC-19",
+    "form": "Условие с блоком",
+    "path": "mode.ts",
+    "source": "if (opened) close();",
+    "expected": true
+  },
+  {
+    "rule": "MISC-19",
+    "form": "Условие с блоком · контроль",
+    "path": "mode.ts",
+    "source": "if (opened) { close(); }",
+    "expected": false
+  },
+  {
+    "rule": "TS-3",
+    "form": "Вычисляемый статический ключ",
+    "path": "mode.ts",
+    "source": "console['log']('demo');",
+    "expected": true
+  },
+  {
+    "rule": "TS-3",
+    "form": "Константный алиас console.log",
+    "path": "mode.ts",
+    "source": "const debug = console.log; debug('demo');",
+    "expected": true
+  },
+  {
+    "rule": "TS-3",
+    "form": "Деструктуризация console из globalThis",
+    "path": "mode.ts",
+    "source": "const { log: write } = globalThis.console; write('demo');",
+    "expected": true
+  },
+  {
+    "rule": "TS-3",
+    "form": "Старый вызов за пределами диффа",
+    "path": "mode.ts",
+    "source": "console.log('existing');\nconst next = 1;",
+    "expected": false,
+    "status": "modified",
+    "changed": [
+      2
+    ]
+  },
+  {
+    "rule": "TS-3",
+    "form": "Локальное исключение правила",
+    "path": "mode.ts",
+    "source": "// frontend-conventions-disable TS-3\nconsole.log('demo');",
+    "expected": false,
+    "auditorOnly": true
+  },
+  {
+    "rule": "TS-2",
+    "form": "Optional boolean сохраняет undefined",
+    "path": "mode.ts",
+    "source": "function hasAccess(access?: boolean) { return access === false; }",
+    "expected": false
+  },
+  {
+    "rule": "TS-6",
+    "form": "Неявный числовой enum",
+    "path": "mode.ts",
+    "source": "enum Mode { Open, Closed }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-1",
+    "form": "Базовый класс React импортирован с алиасом",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {PureComponent as View} from 'react'; class Catalog extends View { render() { return null; } }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-1",
+    "form": "Одноимённый доменный класс",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {PureComponent as View} from './domain'; class Catalog extends View {}",
+    "expected": false
+  },
+  {
+    "rule": "REACT-7",
+    "form": "Inline-функция в логическом выражении",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const row = <button onClick={opened && (() => save())}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-7",
+    "form": "Inline-обработчик с function",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const row = <button onClick={function () { save(); }}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-7",
+    "form": "Функция в аргументе фабрики",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const row = <button onClick={makeHandler(() => save())}/>;",
+    "expected": false
+  },
+  {
+    "rule": "CSS-7",
+    "form": "Атрибут на нескольких строках",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row [\n    data-tid='cell'\n] { padding: 4px; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-7",
+    "form": "Селектор внутри блочного комментария",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": "/*\n [data-tid='cell'] { }\n */\n.row[data-tid-label] { content: '[data-tid]'; }",
+    "expected": false
+  },
+  {
+    "rule": "CSS-7",
+    "form": "Псевдокласс :has",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": "@media (min-width: 4px) { .row:has([data-tid]) { padding: 4px; } }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-8",
+    "form": "Константный алиас объекта стилей",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const spacing = {padding: 4} satisfies CSSProperties; const alias = spacing; const Catalog = () => <div style={alias}/>;",
+    "expected": true
+  },
+  {
+    "rule": "CSS-8",
+    "form": "Одноимённая константа затенена пропсом",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const layout = {padding: 4}; const Catalog = ({layout}) => <div style={layout}/>;",
+    "expected": false
+  },
+  {
+    "rule": "CSS-9",
+    "form": "Имя соседнего SCSS-модуля",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import styles from './Summary.module.scss';",
+    "expected": true
+  },
+  {
+    "rule": "CSS-9",
+    "form": "Общие стили из дочернего каталога",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import styles from './styles/common.module.scss';",
+    "expected": false
+  },
+  {
+    "rule": "CSS-6",
+    "form": "Собственный line-height",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { line-height: 20px; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-5",
+    "form": "Цвет как rgb или hsl",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { color: rgb(35,55,80); background: hsl(10,20%,30%); }",
+    "expected": true
+  },
+  {
+    "rule": "RUI-1",
+    "form": "Импорт иконки через путь старой версии",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {IconAdd16} from '@example/icons/icons/IconAdd16';",
+    "expected": true
+  },
+  {
+    "rule": "RUI-5",
+    "form": "Gapped как JSX-член namespace",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import * as UI from '@example/react-ui'; const Catalog = () => <UI.Gapped/>;",
+    "expected": true
+  },
+  {
+    "rule": "RUI-5",
+    "form": "Gapped как вычисляемый член namespace",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import * as UI from '@example/react-ui'; const Layout = UI['Gapped'];",
+    "expected": true
+  },
+  {
+    "rule": "RUI-5",
+    "form": "Импорт вне области профиля",
+    "path": "Web/OtherApp/App/components/Catalog/Catalog.tsx",
+    "source": "import * as UI from '@example/react-ui'; const Catalog = () => <UI.Gapped/>;",
+    "expected": false
+  },
+  {
+    "rule": "FS-16",
+    "form": "Default function вне hooks",
+    "path": "components/Catalog/useCatalog.ts",
+    "source": "export default function useCatalog() { return useState(0); }",
+    "expected": true
+  },
+  {
+    "rule": "FS-16",
+    "form": "Хук в существующем файле",
+    "path": "components/Catalog/useCatalog.ts",
+    "source": "export default function useCatalog() { return useState(0); }",
+    "expected": false,
+    "status": "modified"
+  },
+  {
+    "rule": "FS-13",
+    "form": "Тест в зеркале слайсов",
+    "path": "components/Catalog/__tests__/slices/loadSlice.test.ts",
+    "source": "it('обновляет строки', () => {});",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-11",
+    "form": "Тип через namespace",
+    "path": "components/Catalog/slice.ts",
+    "source": "import type * as Old from 'redux'; type Event = Old.Action;",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-11",
+    "form": "Вызов runtime-метода",
+    "path": "components/Catalog/slice.ts",
+    "source": "import * as Old from 'redux'; const store = Old.createStore(reducer);",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-9",
+    "form": "Массив receiver и алиас клиента",
+    "path": "components/Catalog/sagas.ts",
+    "source": "import {CatalogApi as Client} from './CatalogApi'; function* load() { yield call([Client, Client.search], query); }",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-9",
+    "form": "Namespace эффекта и context/fn",
+    "path": "components/Catalog/sagas.ts",
+    "source": "import {CatalogApi as Client} from './CatalogApi'; import * as effects from 'redux-saga/effects'; function* load() { yield effects.call({context: Client, fn:'search'}, query); }",
+    "expected": true
+  },
+  {
+    "rule": "URL-1",
+    "form": "Деструктуризация глобального fetch",
+    "path": "mode.ts",
+    "source": "const { fetch: request } = globalThis; request('/demo');",
+    "expected": true
+  },
+  {
+    "rule": "URL-1",
+    "form": "Локальный импорт fetch",
+    "path": "mode.ts",
+    "source": "import {fetch} from './client'; fetch(query);",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-10",
+    "form": "yield в while, do-while и for",
+    "path": "components/Catalog/sagas.ts",
+    "source": "function* load() { while (yield select(next)) { step(); } do { step(); } while (yield select(next)); for (; yield select(next);) { step(); } }",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-10",
+    "form": "Вложенный generator в условии",
+    "path": "components/Catalog/sagas.ts",
+    "source": "function* load() { if (register(function* () { yield select(next); })) { step(); } }",
+    "expected": false
+  },
+  {
+    "rule": "REACT-19",
+    "form": "Фабрика через function declaration",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "function build(id: number) { return (text: string) => save(id, text); } const Catalog = () => <Panel onChange={build(id)}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-19",
+    "form": "Фабрика с подготовкой перед return",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const build = id => { const key = String(id); return text => save(key, text); }; const Catalog = () => <Panel onChange={build(id)}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-19",
+    "form": "Функция возвращает полезное значение",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "function build(id: number) { return makeLabel(id); } const Catalog = () => <Panel onChange={build(id)}/>;",
+    "expected": false
+  },
+  {
+    "rule": "REACT-10",
+    "form": "Фабрика через именованный реэкспорт",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {useSelector} from 'react-redux'; import {makeView} from './selectors'; const Catalog = () => <div>{useSelector(makeView())}</div>;",
+    "expected": true,
+    "related": {
+      "selectors/index.ts": "export {build as makeView} from './viewSelectors';",
+      "selectors/viewSelectors.ts": "import {createSelector} from 'reselect'; export const build = () => createSelector(root, rows => rows);"
+    }
+  },
+  {
+    "rule": "REACT-10",
+    "form": "Зацикленный реэкспорт",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {useSelector} from 'react-redux'; import {makeView} from './selectors'; const Catalog = () => <div>{useSelector(makeView())}</div>;",
+    "expected": false,
+    "related": {
+      "selectors/index.ts": "export {makeView} from './views';",
+      "selectors/views.ts": "export {makeView} from './index';"
+    }
+  },
+  {
+    "rule": "MISC-14",
+    "form": "Табы в новых строках",
+    "path": "layout.ts",
+    "source": "function load() {\n\tstep(0);\n\tstep(1);\n\tstep(2);\n\tstep(3);\n\tstep(4);\n\tstep(5);\n\tstep(6);\n\tstep(7);\n\tstep(8);\n\tstep(9);\n}",
+    "expected": true
+  },
+  {
+    "rule": "MISC-14",
+    "form": "Табы только в старых строках",
+    "path": "layout.ts",
+    "source": "function load() {\n\tstep(0);\n\tstep(1);\n\tstep(2);\n\tstep(3);\n\tstep(4);\n\tstep(5);\n\tstep(6);\n\tstep(7);\n\tstep(8);\n\tstep(9);\n}\nconst ready = true;",
+    "expected": false,
+    "status": "modified",
+    "changed": [
+      13
+    ]
+  },
+  {
+    "rule": "MISC-8",
+    "form": "Частичное полезное изменение посреди форматирования",
+    "path": "layout.ts",
+    "source": "export const size = 24;",
+    "expected": true,
+    "status": "modified",
+    "stat": {
+      "insertions": 22,
+      "deletions": 22
+    },
+    "statNoWs": {
+      "insertions": 1,
+      "deletions": 1
+    }
+  },
+  {
+    "rule": "MISC-19",
+    "form": "Отдельная строка тела else",
+    "path": "mode.ts",
+    "source": "if (opened) { close(); } else\n    open();",
+    "expected": true
+  },
+  {
+    "rule": "MISC-19",
+    "form": "Разрешённый else if",
+    "path": "mode.ts",
+    "source": "if (opened) { close(); } else if (ready) { open(); }",
+    "expected": false
+  },
+  {
+    "rule": "MVVM-7",
+    "form": "Новый отдельный actions.ts",
+    "path": "components/Catalog/actions.ts",
+    "source": "export const reset = () => ({type:'reset'});",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-7",
+    "form": "Зеркало legacy-редьюсера в тестах",
+    "path": "components/Catalog/__tests__/reducers/reducer.test.ts",
+    "source": "it('сохраняет состояние', () => {});",
+    "expected": false
+  },
+  {
+    "rule": "REDUX-6",
+    "form": "Наличие обработчика ошибки запроса",
+    "path": "components/Catalog/slice.ts",
+    "source": "createSlice({name:'catalog',initialState:{},reducers:{saveRow(){},saveRowBegin(){},saveRowSuccess(){}}});",
+    "expected": false,
+    "manual": "Ошибка может обрабатываться общим экшеном. Проверь контракт fetchData и потребителей."
+  },
+  {
+    "rule": "FS-6",
+    "form": "Назначение фабрики с произвольным именем",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const prepareRow = () => buildSelector();",
+    "expected": false,
+    "manual": "Роль ViewModel определяется в местах использования, если её нельзя доказать по объявлению."
+  },
+  {
+    "rule": "TS-2",
+    "form": "Инверсия при !== false",
+    "path": "mode.ts",
+    "source": "const canEdit = (ok: boolean) => ok !== false;",
+    "expected": true,
+    "suggestion": "ok"
+  },
+  {
+    "rule": "TS-4",
+    "form": "Точечный доступ к полю",
+    "path": "mode.ts",
+    "source": "delete result.obsolete;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-2",
+    "form": "Inline-компонент в React.memo",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const Catalog = React.memo(() => <main/>);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-3",
+    "form": "React.Fragment из function declaration",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "export function Catalog() { return <React.Fragment><i/><b/></React.Fragment>; }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-4",
+    "form": "location целиком в зависимостях",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const location = useLocation(); useEffect(() => reload(location.pathname), [location]);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-8",
+    "form": "Начальный state внутри конструктора",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "class Catalog extends React.PureComponent { constructor(props: Props) { super(props); this.state = {opened:false}; } render() { return null; } }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-9",
+    "form": "Обычный селектор дочернего компонента",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {useSelector} from 'react-redux'; import {getRowCount} from './components/Row/selectors/viewSelectors'; useSelector(getRowCount);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-11",
+    "form": "Импорт соседней фичи из вложенного компонента",
+    "path": "components/Catalog/components/Row/Row.tsx",
+    "source": "import {useSelector} from 'react-redux'; import {getCartViewModel} from '../../../Cart/selectors/viewSelectors'; useSelector(getCartViewModel);",
+    "expected": true
+  },
+  {
+    "rule": "REACT-12",
+    "form": "Bound action передан в onValueChange",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const bound = useActions(catalogActions); const Catalog = () => <Input onValueChange={bound.setValue}/>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-13",
+    "form": "Именованный импорт с алиасом",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {catalogEnabled as enabled} from '../../config/featureFlags';",
+    "expected": true
+  },
+  {
+    "rule": "REACT-14",
+    "form": "Вложенное свойство объекта вместо map",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const bindedActions = useActions({catalogActions});",
+    "expected": true
+  },
+  {
+    "rule": "REACT-15",
+    "form": "Квалифицированный React.FC",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import React from 'react'; const Catalog: React.FC<Props> = props => <main>{props.title}</main>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-16",
+    "form": "Одна подписка на ViewModel другой сущности",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {useSelector} from 'react-redux'; import {getCartViewModel} from './selectors/viewSelectors'; const Catalog = () => <main>{useSelector(getCartViewModel).title}</main>;",
+    "expected": true
+  },
+  {
+    "rule": "REACT-17",
+    "form": "Два вызова импортированного алиаса",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {useActions as bind} from '@example/app-ui/hooks'; function Catalog() { const load = bind(listActions); const save = bind(editActions); return <Form load={load} save={save}/>; }",
+    "expected": true
+  },
+  {
+    "rule": "REACT-18",
+    "form": "Namespace хука внутри memo",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import * as hooks from '@example/app-ui/hooks'; import {memo} from 'react'; export const Catalog = memo(() => { const actions = hooks.useActions(listActions); return <Form actions={actions}/>; });",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-1",
+    "form": "Function-селектор без типа результата",
+    "path": "components/Catalog/selectors/sagaSelectors.ts",
+    "source": "export function getQuery(state: State) { return {id: state.id}; }",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-2",
+    "form": "RootState в именованной функции",
+    "path": "components/Catalog/selectors/baseSelectors.ts",
+    "source": "export function getRoot(state: RootState) { return state.catalog; }",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-4",
+    "form": "Шаблонный литерал без интерполяции",
+    "path": "components/Catalog/slice.ts",
+    "source": "createAction(`catalog/load`);",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-5",
+    "form": "Голый массив как тип payload",
+    "path": "components/Catalog/slice.ts",
+    "source": "type Select = PayloadAction<number[]>;",
+    "expected": true
+  },
+  {
+    "rule": "REDUX-6",
+    "form": "Имя экшена как строковый ключ",
+    "path": "components/Catalog/slice.ts",
+    "source": "createSlice({name:'catalog', initialState:{}, 'reducers':{'saveRow'() {}}});",
+    "expected": true
+  },
+  {
+    "rule": "CSS-1",
+    "form": "Локальный класс в @media",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": "@media (min-width: 4px) { .item-row { display: grid; } }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-2",
+    "form": "Root с inline-объявлением",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ":root { --accent: currentColor; }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-3",
+    "form": "Вложенный :global",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".picker { :global(.menuOverlay) { display: grid; } }",
+    "expected": true
+  },
+  {
+    "rule": "CSS-4",
+    "form": "Сдвиг с отрицательным размером",
+    "path": "components/Catalog/Catalog.module.scss",
+    "source": ".row { margin-left: -6px; }",
+    "expected": true
+  },
+  {
+    "rule": "RUI-2",
+    "form": "Аналог другого базового контрола",
+    "path": "components/Select/Select.tsx",
+    "source": "export function Select() { return <select/>; }",
+    "expected": true
+  },
+  {
+    "rule": "RUI-3",
+    "form": "Самозакрывающийся svg",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "export const Graphic = () => <svg viewBox='0 0 16 16'/>;",
+    "expected": true
+  },
+  {
+    "rule": "RUI-4",
+    "form": "Импорт примитива из вложенной точки входа",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {Select as Input} from '@example/app-ui/components/Select/Select';",
+    "expected": true
+  },
+  {
+    "rule": "EB-1",
+    "form": "Connect с двумя аргументами",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const Wrapped = connect(mapState, mapDispatch)(ModalErrorBoundary);",
+    "expected": true
+  },
+  {
+    "rule": "URL-2",
+    "form": "Проп match",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const Catalog = () => <Panel match={match}/>;",
+    "expected": true
+  },
+  {
+    "rule": "FS-1",
+    "form": "Второй компонент как function declaration",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "export function Catalog() { return <Row/>; }\nfunction Row() { return <div/>; }",
+    "expected": true
+  },
+  {
+    "rule": "FS-2",
+    "form": "Переименование в глубокий вложенный каталог",
+    "path": "components/Catalog/components/Table/components/List/components/Row/Row.tsx",
+    "source": "export const Row = () => <tr/>;",
+    "expected": true,
+    "status": "renamed"
+  },
+  {
+    "rule": "FS-4",
+    "form": "Перенос крупного вложенного файла",
+    "path": "components/Catalog/components/Row/Row.tsx",
+    "source": "const Row = () => {\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    return <div/>;\n};",
+    "expected": true,
+    "status": "renamed"
+  },
+  {
+    "rule": "FS-5",
+    "form": "Название папки компонента с маленькой буквы",
+    "path": "components/catalog/catalog.tsx",
+    "source": "export const catalog = () => <main/>;",
+    "expected": true
+  },
+  {
+    "rule": "FS-6",
+    "form": "Экспорт именованной фабрики без Model",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export function makeRowView() { return createSelector(root, rows => rows); }",
+    "expected": true
+  },
+  {
+    "rule": "FS-7",
+    "form": "Вложенная конфигурация из литералов",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const DEFAULTS = { filter: { enabled: true, limit: 12 }, modes: ['all'] };",
+    "expected": true
+  },
+  {
+    "rule": "FS-8",
+    "form": "Default export объявления функции",
+    "path": "components/Catalog/reducer.ts",
+    "source": "export default function reducer(state) { return state; }",
+    "expected": true
+  },
+  {
+    "rule": "FS-12",
+    "form": "Группа маршрутов в JSX-константе",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "export const Catalog = <Route path={base}><Route path={list}/><Route path={details}/></Route>;",
+    "expected": true
+  },
+  {
+    "rule": "FS-13",
+    "form": "Короткое имя переименованного слайса",
+    "path": "components/Catalog/slices/row.ts",
+    "source": "export const row = createSlice(options);",
+    "expected": true,
+    "status": "renamed"
+  },
+  {
+    "rule": "FS-14",
+    "form": "Переименованный тестовый TSX",
+    "path": "components/Catalog/catalog.test.tsx",
+    "source": "it('открывает карточку', () => {});",
+    "expected": true,
+    "status": "renamed"
+  },
+  {
+    "rule": "FS-15",
+    "form": "Тест с похожим именем проверяет другой helper",
+    "path": "components/Catalog/helpers/normalize.ts",
+    "source": "export const normalize = value => value.trim();",
+    "expected": true,
+    "related": {
+      "../__tests__/helpers/format.test.ts": "it('форматирует', () => {});"
+    }
+  },
+  {
+    "rule": "MVVM-1",
+    "form": "Вложенный тернарник в JSX-атрибуте",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const Catalog = () => <Row state={ok ? ready ? 'ready' : 'busy' : 'error'}/>;",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-2",
+    "form": "При переносе viewSelectors нет baseSelectors",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getDetailsViewModel = state => state.details;",
+    "expected": true,
+    "status": "renamed"
+  },
+  {
+    "rule": "MVVM-4",
+    "form": "Селектор с узкой проекцией повторно вызван в map",
+    "path": "components/Catalog/selectors/viewSelectors.ts",
+    "source": "export const getItem = createSelector(root, state => state.label); const values = items.map(item => getItem(item));",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-5",
+    "form": "Локальный стейт через namespace React",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const Catalog = () => { const [opened, setOpened] = React.useState(false); return <Panel opened={opened}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "MVVM-9",
+    "form": "Ранее существовавший вложенный viewSelectors",
+    "path": "components/Catalog/components/Row/selectors/viewSelectors.ts",
+    "source": "export const getRowViewModel = state => state.row;",
+    "expected": true,
+    "status": "modified"
+  },
+  {
+    "rule": "MVVM-10",
+    "form": "Имя нового файла внутри selectors",
+    "path": "components/Catalog/selectors/itemData.ts",
+    "source": "export const getRow = state => state.row;",
+    "expected": true,
+    "auditorOnly": true
+  },
+  {
+    "rule": "MVVM-11",
+    "form": "Чистая проекция с алиасом useSelector",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "import {useSelector as selectValue} from 'react-redux'; const Catalog = () => { const rows = selectValue(getRows); const values = rows.filter(row => row.enabled); return <Panel rows={values}/>; };",
+    "expected": true
+  },
+  {
+    "rule": "MISC-1",
+    "form": "Напрямую импортируется подпуть библиотеки дат",
+    "path": "mode.ts",
+    "source": "import {startOfDay} from 'date-fns/startOfDay';",
+    "expected": true
+  },
+  {
+    "rule": "MISC-3",
+    "form": "Отключён целый describe",
+    "path": "components/Catalog/__tests__/catalog.test.ts",
+    "source": "// describe('каталог', () => {});",
+    "expected": true
+  },
+  {
+    "rule": "MISC-4",
+    "form": "Неконкретное имя helper в дочернем компоненте",
+    "path": "components/Catalog/components/Row/helpers.ts",
+    "source": "export const build = value => encode(value);",
+    "expected": true
+  },
+  {
+    "rule": "MISC-12",
+    "form": "Сага изменена без тестов в выбранном снимке",
+    "path": "components/Catalog/sagas.ts",
+    "source": "export function* load() { yield call(worker); }",
+    "expected": true,
+    "status": "modified"
+  },
+  {
+    "rule": "MISC-15",
+    "form": "Размер в арифметике CSS-компонента",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const columnCount = 6 + (showActions ? 2 : 0);",
+    "expected": true
+  },
+  {
+    "rule": "MISC-16",
+    "form": "Вложенный объект конфигурации",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const rowConfig = { width: 24, options: ['stable'] };",
+    "expected": true
+  },
+  {
+    "rule": "MISC-17",
+    "form": "Длинная стрелочная функция",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const renderCells = () => {\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n    drawCell();\n};",
+    "expected": true
+  },
+  {
+    "rule": "MISC-18",
+    "form": "Односимвольный параметр",
+    "path": "components/Catalog/Catalog.tsx",
+    "source": "const getValue = (q: Row) => q.value;",
+    "expected": true
+  }
+]

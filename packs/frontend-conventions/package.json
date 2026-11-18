@@ -1,0 +1,29 @@
+{
+  "name": "@selfreview/frontend-conventions",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "bin": {
+    "frontend-conventions": "./dist/auditor/src/cli.js"
+  },
+  "exports": {
+    ".": "./dist/auditor/src/index.js",
+    "./eslint": "./dist/eslint-plugin/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run build && node checks/run.mjs && node checks/smoke.mjs"
+  },
+  "dependencies": {
+    "@typescript-eslint/typescript-estree": "8.70.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "@typescript-eslint/parser": "8.70.0",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3"
+  }
+}

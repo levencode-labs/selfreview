@@ -1,0 +1,12 @@
+{
+  "appUi": "@example/app-ui",
+  "legacyUi": "@example/legacy-ui",
+  "reactUi": "@example/react-ui",
+  "icons": "@example/icons",
+  "typography": "@example/typography",
+  "targetApp": "Web/SampleApp/App",
+  "dateImplementation": "Web/SharedUi/src/libs/date",
+  "sharedUiDirectory": "legacy-ui",
+  "configFile": ".frontend-conventions.json",
+  "disableDirective": "frontend-conventions-disable"
+}
