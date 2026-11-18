@@ -26,11 +26,12 @@ static class Detector
             CSharpCompilation.Create("Review", [tree], RuntimeReferences.Value).GetSemanticModel(tree));
         SemanticModel Semantic() => semanticModel.Value;
         var seen = new HashSet<(string, int)>();
-        bool Report(string id, SyntaxNode node)
+        bool Report(string id, SyntaxNode node, SyntaxToken? site = null)
         {
-            var range = tree.GetLineSpan(node.Span);
+            var span = site?.Span ?? node.Span;
+            var range = tree.GetLineSpan(span);
             var start = range.StartLinePosition.Line + 1;
-            var end = tree.GetLineSpan(new Microsoft.CodeAnalysis.Text.TextSpan(node.Span.End - 1, 1)).EndLinePosition.Line + 1;
+            var end = tree.GetLineSpan(new Microsoft.CodeAnalysis.Text.TextSpan(span.End - 1, 1)).EndLinePosition.Line + 1;
             var line = changed.Where(r => r.Start <= end && r.End >= start)
                 .Select(r => Math.Max(r.Start, start)).DefaultIfEmpty(0).Min();
             if (line == 0) return false;
@@ -68,6 +69,25 @@ static class Detector
                 Semantic().GetSymbolInfo(result).Symbol is IPropertySymbol propertySymbol &&
                 TaskType(propertySymbol.ContainingType) && InsideAsync(result))
                 Report("ASYNC-001", result);
+
+            if (node is AttributeSyntax nullability &&
+                AttributeName(nullability, Semantic(), "JetBrains.Annotations") is "NotNull" or "CanBeNull" or "ItemNotNull" or "ItemCanBeNull")
+                Report("CS-006", nullability);
+
+            if (!test && node is MethodDeclarationSyntax declared &&
+                declared.Modifiers.Any(SyntaxKind.PrivateKeyword) && declared.Modifiers.Any(SyntaxKind.AsyncKeyword) &&
+                !declared.Modifiers.Any(SyntaxKind.PartialKeyword) &&
+                !declared.Identifier.ValueText.EndsWith("Async", StringComparison.Ordinal) &&
+                TaskType(Semantic().GetTypeInfo(declared.ReturnType).Type))
+                Report("ASYNC-002", declared, declared.Identifier);
+
+            if (node is BinaryExpressionSyntax coalesce && coalesce.IsKind(SyntaxKind.CoalesceExpression) &&
+                Semantic().GetSymbolInfo(Unwrap(coalesce.Right)).Symbol is IFieldSymbol { Name: "Empty" } emptyId &&
+                emptyId.ContainingType.ToDisplayString() == "System.Guid" &&
+                Semantic().GetTypeInfo(coalesce.Left).Type is INamedTypeSymbol nullable &&
+                nullable.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T &&
+                nullable.TypeArguments[0].ToDisplayString() == "System.Guid")
+                Report("CS-008", coalesce);
 
             if (test && node is AttributeSyntax attribute)
             {
@@ -109,12 +129,19 @@ static class Detector
             var name = call.Expression is MemberAccessExpressionSyntax qualified
                 ? qualified.Name.Identifier.ValueText
                 : ((SimpleNameSyntax)call.Expression).Identifier.ValueText;
-            if (name is "Delay" or "Sleep" or "Count" or "Wait" or "GetResult" or "Locator" or "WaitForTimeoutAsync" &&
+            if (name is "TryGetValue" or "Delay" or "Sleep" or "Count" or "Wait" or "GetResult" or "Locator" or "WaitForTimeoutAsync" &&
                 Semantic().GetSymbolInfo(call).Symbol is IMethodSymbol method)
             {
                 if (test && (method.Name == "Delay" && method.ContainingType.ToDisplayString() == "System.Threading.Tasks.Task" ||
                              method.Name == "Sleep" && method.ContainingType.ToDisplayString() == "System.Threading.Thread"))
                     Report("TEST-001", call);
+                if (name == "TryGetValue" && method.ContainingType.OriginalDefinition.ToDisplayString() is
+                    "System.Collections.Generic.Dictionary<TKey, TValue>" or "System.Collections.Generic.IDictionary<TKey, TValue>" or
+                    "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>" &&
+                    call.ArgumentList.Arguments.Any(a => a.RefKindKeyword.IsKind(SyntaxKind.OutKeyword) &&
+                        (a.Expression is DeclarationExpressionSyntax { Designation: DiscardDesignationSyntax } ||
+                         Semantic().GetSymbolInfo(a.Expression).Symbol is IDiscardSymbol)))
+                    Report("CS-007", call);
                 if (name == "Count" && MaterializedCount(call, method, Semantic()))
                     Report("CS-003", call);
                 if ((name == "Wait" && TaskType(method.ContainingType) ||

@@ -648,5 +648,124 @@
     "path": "tests/Example/Ui/TEST-004-8.cs",
     "after": "class Header : Component { void Find() => Root.Locator(\"//label\"); }",
     "expected": false
+  },
+  {
+    "id": "CS-006",
+    "form": "Полное имя",
+    "path": "src/Example/CS-006-0.cs",
+    "after": "class Model { [JetBrains.Annotations.CanBeNull] string Text; }",
+    "expected": true
+  },
+  {
+    "id": "CS-006",
+    "form": "Аннотация элементов",
+    "path": "src/Example/CS-006-1.cs",
+    "after": "using JetBrains.Annotations; class Model { [ItemNotNull] string[] Rows; }",
+    "expected": true
+  },
+  {
+    "id": "CS-006",
+    "form": "Атрибут платформы",
+    "path": "src/Example/CS-006-2.cs",
+    "after": "using System.Diagnostics.CodeAnalysis; class Model { [NotNull] string Text; }",
+    "expected": false
+  },
+  {
+    "id": "CS-006",
+    "form": "Своя аннотация",
+    "path": "src/Example/CS-006-3.cs",
+    "after": "class NotNullAttribute:System.Attribute {} class Model { [NotNull] string Text; }",
+    "expected": false
+  },
+  {
+    "id": "ASYNC-002",
+    "form": "Task",
+    "path": "src/Example/ASYNC-002-0.cs",
+    "after": "using System.Threading.Tasks; class Service { private async Task Load() { await Task.Yield(); } }",
+    "expected": true
+  },
+  {
+    "id": "ASYNC-002",
+    "form": "ValueTask с результатом",
+    "path": "src/Example/ASYNC-002-1.cs",
+    "after": "using System.Threading.Tasks; class Service { private static async ValueTask<int> Read() => 3; }",
+    "expected": true
+  },
+  {
+    "id": "ASYNC-002",
+    "form": "Суффикс",
+    "path": "src/Example/ASYNC-002-2.cs",
+    "after": "using System.Threading.Tasks; class Service { private async Task ReadAsync() {} }",
+    "expected": false
+  },
+  {
+    "id": "ASYNC-002",
+    "form": "Публичный контракт",
+    "path": "src/Example/ASYNC-002-3.cs",
+    "after": "using System.Threading.Tasks; class Service { public async Task Read() {} }",
+    "expected": false
+  },
+  {
+    "id": "ASYNC-002",
+    "form": "Имя тестового метода",
+    "path": "tests/Example/ASYNC-002-4.cs",
+    "after": "using System.Threading.Tasks; class Service { private async Task Read() {} }",
+    "expected": false
+  },
+  {
+    "id": "CS-007",
+    "form": "Отброшенный результат",
+    "path": "src/Example/CS-007-0.cs",
+    "after": "using System.Collections.Generic; class Cache { bool Has(Dictionary<int,string> values) => values.TryGetValue(0, out _); }",
+    "expected": true
+  },
+  {
+    "id": "CS-007",
+    "form": "Типизированный discard",
+    "path": "src/Example/CS-007-1.cs",
+    "after": "using System.Collections.Generic; class Cache { bool Has(IReadOnlyDictionary<int,string> values) => values.TryGetValue(0, out string _); }",
+    "expected": true
+  },
+  {
+    "id": "CS-007",
+    "form": "Значение используется",
+    "path": "src/Example/CS-007-2.cs",
+    "after": "using System.Collections.Generic; class Cache { string Get(Dictionary<int,string> values) => values.TryGetValue(0, out var value) ? value : null; }",
+    "expected": false
+  },
+  {
+    "id": "CS-007",
+    "form": "Переменная с именем подчёркивания",
+    "path": "src/Example/CS-007-3.cs",
+    "after": "using System.Collections.Generic; class Cache { string Get(Dictionary<int,string> values) { string _; values.TryGetValue(0, out _); return _; } }",
+    "expected": false
+  },
+  {
+    "id": "CS-008",
+    "form": "Оператор для Guid?",
+    "path": "src/Example/CS-008-0.cs",
+    "after": "using System; class Item { Guid Read(Guid? key) => key ?? Guid.Empty; }",
+    "expected": true
+  },
+  {
+    "id": "CS-008",
+    "form": "Полное имя и скобки",
+    "path": "src/Example/CS-008-1.cs",
+    "after": "class Item { System.Guid Read(System.Guid? key) => key ?? (System.Guid.Empty); }",
+    "expected": true
+  },
+  {
+    "id": "CS-008",
+    "form": "Обязательный резервный ключ",
+    "path": "src/Example/CS-008-2.cs",
+    "after": "using System; class Item { Guid Read(Guid? key, Guid fallback) => key ?? fallback; }",
+    "expected": false
+  },
+  {
+    "id": "CS-008",
+    "form": "Объект с другим типом",
+    "path": "src/Example/CS-008-3.cs",
+    "after": "using System; class Item { object Read(object key) => key ?? Guid.Empty; }",
+    "expected": false
   }
 ]

@@ -2,7 +2,9 @@
 
 [Русский](README.ru.md)
 
-A Git-diff review pack for C# and SQL. The shared catalog contains review signals for C#, MVC, tests and SQL and thirteen manual review checks. [Catalog](catalog.json)
+A Git-diff review pack for C# and SQL. The shared catalog contains review signals for C#, MVC, tests and SQL and a manual review checklist. [Catalog](catalog.json)
+
+[Manual review scenarios and expected outcomes](../../examples/conventions/review-scenarios.json)
 
 ## Restore from a clone
 

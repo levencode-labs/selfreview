@@ -4,6 +4,8 @@
 
 A standalone JS/TS/React review pack. It contains a shared detector registry, a diff-aware CLI, an ESLint adapter, a manual checklist, and a runnable synthetic matrix. Choose a project explicitly before applying the pack. Project documentation and native checks decide applicability and local exceptions.
 
+[Manual review scenarios and expected outcomes](../../examples/conventions/review-scenarios.json)
+
 ## Restore from a clone
 
 From the SelfReview repository root, use Node.js 22.13+ and Git.
