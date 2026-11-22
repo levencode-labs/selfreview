@@ -13,7 +13,7 @@ const REACT_MARKERS = new Set([
   '@remix-run/react','@tanstack/react-router',
 ]);
 const MAX_DIRS=150000, MAX_MANIFESTS=20000, MAX_MANIFEST_SIZE=512*1024;
-const MAX_REACT_ROOTS=2000, MAX_DEPTH=100, MAX_GAPS=150;
+const MAX_REACT_ROOTS=100, MAX_DEPTH=100, MAX_GAPS=150;
 const normalize = value => posix(value);
 const relative = (root,file) => normalize(path.relative(root,file))||'.';
 const exactDir = (a,b) => process.platform==='win32'?a.toLowerCase()===b.toLowerCase():a===b;
@@ -120,7 +120,7 @@ export function discoverReactPackages(projectRoot){
   }
   const codeRoots=selected.map(item=>path.resolve(root,item.directory)).sort();
   const status=gaps.length?'INCOMPLETE':
-    codeRoots.length?'FOUND_REACT_PACKAGES':'NO_REACT_PACKAGES';
+    codeRoots.length?'FOUND_REACT_PACKAGES':matches.length?'AMBIGUOUS_WORKSPACE_ROOT':'NO_REACT_PACKAGES';
   return {
     status,complete:gaps.length===0,mode:'RECURSIVE_PACKAGE_JSON',
     discoveryDepthLimit:MAX_DEPTH,scanRoot:root,
