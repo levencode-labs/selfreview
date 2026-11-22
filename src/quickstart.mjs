@@ -112,8 +112,9 @@ export function quickstartProject(options){
   const status=rootFallback?'SOURCE_ROOT_UNCERTAIN':!mine.coverage.complete?'INCOMPLETE_MINING':
     semantic.status==='INCOMPLETE'?'INCOMPLETE_SEMANTIC':
     semantic.status==='NOT_RUN_AMBIGUOUS_TSCONFIG'?'SEMANTIC_REQUIRES_CONFIG':
+    semantic.exitCode===1?'VIOLATIONS':
     'READY';
-  return {schemaVersion:1,mode:'quickstart',status,exitCode:status==='READY'?0:2,
+  return {schemaVersion:1,mode:'quickstart',status,exitCode:status==='READY'?0:status==='VIOLATIONS'?1:2,
     projectRoot:root,codeRoots:selected,config:configFile,project:projectId,scope,
     configCreated:created,
     existingPolicyPreserved:!created,
