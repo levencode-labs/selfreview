@@ -35,7 +35,7 @@ From an installed SelfReview clone, run:
 node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy'
 ```
 
-The command locates `react-apps`, creates a catalog only when none exists at the selected data location, and mines read-only AST observations. Add `--enrich` to import unapproved candidates and `--semantic` to opt into a bounded TypeScript import graph and React review. Existing approvals are not promoted or overwritten. If rules live in a different config, provide its exact path with `--config`. See [P2 semantic walkthrough](docs/CODEBASE_SEMANTIC.md) and [Russian commands](docs/CODEBASE_SEMANTIC.ru.md).
+The command recursively discovers `package.json` manifests at any normal nested workspace depth, chooses React-dependent packages (including Next and Vite React projects), skips generated Nx/Yarn/.NET outputs and reports evidence in `sourceDiscovery.matches`. It never falls back to scanning the whole repository if no React project is confirmed. Existing catalog approvals are preserved; a new catalog is only created if none exists at the selected data location. Add `--enrich` to import unapproved candidates and `--semantic` to opt into a bounded TypeScript import graph and React review. Existing approvals are not promoted or overwritten. If rules live in a different config, provide its exact path with `--config`. See [P2 semantic walkthrough](docs/CODEBASE_SEMANTIC.md) and [Russian commands](docs/CODEBASE_SEMANTIC.ru.md).
 
 ## Discover conventions from an existing React monorepo
 

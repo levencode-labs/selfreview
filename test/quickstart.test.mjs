@@ -13,6 +13,10 @@ function fixture(t){
   t.after(()=>fs.rmSync(temp,{recursive:true,force:true}));
   const root=path.join(temp,'billy'),react=path.join(root,'react-apps'),data=path.join(temp,'my-reports');
   fs.mkdirSync(react,{recursive:true});
+  fs.writeFileSync(path.join(react,'package.json'),JSON.stringify({
+    name:'@billy/sample-react-app',private:true,
+    dependencies:{react:'^18.3.1','react-dom':'^18.3.1'},
+  }));
   for(let i=0;i<3;i++)fs.writeFileSync(path.join(react,'Component'+i+'.tsx'),
     "import { Button } from '@team/ui';\n"+
     "export const Widget"+i+" = () => <Button variant=\"solid\" />;\n");
@@ -71,12 +75,15 @@ test('quickstart refuses to replace an existing catalog missing its configuratio
 test('source filename omission never makes full project fallback look like a complete react-apps scan',t=>{
   const f=fixture(t);
   fs.renameSync(f.react,path.join(f.root,'application-code'));
-  const r=invoke(f);
+  fs.unlinkSync(path.join(f.root,'application-code','package.json'));
+  const r=invoke(f,['--enrich','--semantic']);
   assert.equal(r.status,2,r.stderr);
   const report=JSON.parse(r.stdout);
-  assert.equal(report.mining.analyzedFiles,3);
-  assert.deepEqual(report.codeRoots,[f.root]);
+  assert.deepEqual(report.codeRoots,[]);
   assert.equal(report.status,'SOURCE_ROOT_UNCERTAIN');
-  assert.equal(report.sourceDiscovery.reason,'REACT_APPS_NOT_FOUND');
-  assert.equal(report.enrichment.status,'NOT_REQUESTED');
+  assert.equal(report.sourceDiscovery.status,'NO_REACT_PACKAGES');
+  assert.equal(report.mining.status,'NOT_RUN_UNVERIFIED_ROOTS');
+  assert.equal(report.enrichment.status,'NOT_APPLIED_UNVERIFIED_ROOTS');
+  assert.equal(report.semantic.status,'NOT_RUN_UNVERIFIED_ROOTS');
+  assert.equal(fs.existsSync(path.join(f.data,'react-apps.mine.json')),false);
 });

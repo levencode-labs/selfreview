@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 export const VERSION = '0.2.0';
 export const EXTENSIONS = new Set(['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts']);
 export const DEFAULT_INCLUDE = [...EXTENSIONS].map(e => `**/*${e}`);
-export const EXCLUDED_DIRS = new Set(['node_modules', '.git', '.selfreview', 'dist', 'build', 'coverage', '.next', '.nuxt', 'vendor']);
+export const EXCLUDED_DIRS = new Set(['node_modules', '.git', '.selfreview', 'dist', 'build', 'coverage', '.next', '.nuxt', 'vendor', '.nx', '.yarn', '.cache', '.turbo', '.parcel-cache', 'obj', 'bin']);
 export const posix = value => value.replaceAll('\\', '/');
 export const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 export function stable(value) {

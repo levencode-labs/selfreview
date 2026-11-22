@@ -27,13 +27,19 @@ CLI и адаптер ESLint.
 
 ## Быстрый запуск BILLY одной командой (P2)
 
-Из установленного SelfReview:
+Из установленного SelfReview сначала проверь найденные React-проекты **без анализа всех исходников и без изменения правил**:
 
 ```powershell
-node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy'
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy' --discover-only
 ```
 
-Команда находит `react-apps`, использует существующий каталог в папке результатов или создаёт новый, если его ещё нет, и собирает AST-наблюдения без изменения проекта. `--enrich` добавляет только неподтверждённые кандидаты, `--semantic` включает ограниченный TypeScript-анализ. Если твои старые правила находятся в другом месте, передай существующий `--config`. [Пошаговая инструкция P2](docs/CODEBASE_SEMANTIC.ru.md).
+Затем запусти майнинг и P2:
+
+```powershell
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy' --enrich --semantic
+```
+
+Команда **рекурсивно находит `package.json`** (не только в папках первого уровня), выбирает проекты по зависимостям React/Next/Vite React, пропускает Nx/Yarn-кэши и .NET-сборки и перечисляет найденные каталоги в `sourceDiscovery.matches`. Исходники других проектов не анализируются. Существующий каталог правил сохраняется, а при отсутствии найденных React-пакетов сканирование всего BILLY **не** запускается. `--enrich` добавляет только неподтверждённые кандидаты, `--semantic` включает ограниченный TypeScript-анализ. Если твои старые правила находятся в другом месте, передай существующий `--config`. [Пошаговая инструкция P2](docs/CODEBASE_SEMANTIC.ru.md).
 
 ## Изучение исходников React-монорепозитория
 

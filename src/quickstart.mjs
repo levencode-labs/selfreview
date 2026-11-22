@@ -3,34 +3,25 @@ import path from 'node:path';
 import { loadConfig, loadCatalog, projectInfo } from './config.mjs';
 import { mineProject, enrichMine, publicMineReport } from './mine.mjs';
 import { reviewProjectSemantics } from './semantic.mjs';
-import { assert, contained, posix, slug, writeJson, EXCLUDED_DIRS } from './util.mjs';
+import { assert, contained, posix, slug, writeJson } from './util.mjs';
+import { discoverReactPackages } from './react-discovery.mjs';
 
 // A local, noninteractive entry point: no target repo mutations, no user globals,
 // no compiler plugins and no loss of existing approval decisions.
 function projectRoots(root, explicitRoots) {
-  if(explicitRoots?.length){
-    const found=explicitRoots.map(input=>fs.realpathSync(path.resolve(input)));
-    assert(found.every(folder=>contained(root,folder)&&fs.statSync(folder).isDirectory()),
+  if (!explicitRoots?.length) return discoverReactPackages(root);
+  const found = explicitRoots.map(input => {
+    const folder=fs.realpathSync(path.resolve(input));
+    assert(contained(root,folder) && fs.statSync(folder).isDirectory(),
       'All --source-path folders must exist under --project-path');
-    for(let i=0;i<found.length;i++)for(let j=i+1;j<found.length;j++)
-      assert(!contained(found[i],found[j])&&!contained(found[j],found[i]),
-        'Overlapping source roots are not allowed');
-    return [...new Set(found)].sort();
+    return folder;
+  });
+  const unique=[...new Set(found)].sort();
+  for(let i=0;i<unique.length;i++)for(let j=i+1;j<unique.length;j++) {
+    assert(!contained(unique[i],unique[j]),'Overlapping source roots are not allowed');
   }
-  const found=[];
-  function visit(directory,depth){
-    if(depth>3)return;
-    const entries=fs.readdirSync(directory,{withFileTypes:true});
-    for(const entry of entries){
-      if(!entry.isDirectory()||entry.isSymbolicLink()||EXCLUDED_DIRS.has(entry.name))continue;
-      const folder=path.join(directory,entry.name);
-      if(entry.name.toLowerCase()==='react-apps'){found.push(fs.realpathSync(folder));continue;}
-      // Limit discovery to the top few levels instead of searching a huge repo.
-      if(depth<3)visit(folder,depth+1);
-    }
-  }
-  visit(root,0);
-  return found.length?[...new Set(found)].sort():[root];
+  return {status:'EXPLICIT',mode:'EXPLICIT_SOURCE_ROOTS',complete:true,codeRoots:unique,
+    matches:[],coverage:{complete:true,gaps:[],gapCount:0}};
 }
 function preparedConfig(root,folder,filename){
   if(fs.existsSync(filename)){
@@ -80,8 +71,30 @@ export function quickstartProject(options){
   const configFile=path.resolve(options.configPath??path.join(folder,'selfreview.config.json'));
   if(!fs.existsSync(configFile))assert(contained(folder,configFile),
     'A new quickstart config must be created inside --data-dir; use --config to reuse an existing policy anywhere');
-  const selected=projectRoots(root,options.sourcePaths);
-  const rootFallback=!options.sourcePaths?.length&&selected.length===1&&selected[0]===root;
+  const sourceDiscovery=projectRoots(root,options.sourcePaths);
+  const selected=sourceDiscovery.codeRoots;
+  if(options.discoverOnly){
+    const status=!sourceDiscovery.complete?'SOURCE_DISCOVERY_INCOMPLETE':
+      selected.length?'REACT_PACKAGES_DISCOVERED':'SOURCE_ROOT_UNCERTAIN';
+    return {schemaVersion:1,mode:'quickstart-discovery',status,exitCode:status==='REACT_PACKAGES_DISCOVERED'?0:2,
+      projectRoot:root,codeRoots:selected,config:configFile,sourceDiscovery,
+      sourceCodeAnalyzed:false,configCreated:false,catalogChanged:false,
+      next:'Inspect sourceDiscovery.matches, then rerun without --discover-only to perform AST mining.'};
+  }
+  if(!sourceDiscovery.complete || !selected.length) {
+    const incomplete=!sourceDiscovery.complete;
+    const status=incomplete?'SOURCE_DISCOVERY_INCOMPLETE':'SOURCE_ROOT_UNCERTAIN';
+    return {schemaVersion:1,mode:'quickstart',status,exitCode:2,
+      projectRoot:root,codeRoots:selected,config:configFile,
+      configCreated:false,existingPolicyPreserved:true,
+      sourceDiscovery,
+      mining:{status:'NOT_RUN_UNVERIFIED_ROOTS',analyzedFiles:0,patternCount:0},
+      enrichment:{status:'NOT_APPLIED_UNVERIFIED_ROOTS'},
+      semantic:{status:'NOT_RUN_UNVERIFIED_ROOTS'},
+      next:incomplete?
+        'Resolve sourceDiscovery.coverage.gaps; no catalog changes or source analysis were performed.':
+        'No safe React package roots selected. Inspect sourceDiscovery.matches/omitted or pass --source-path; no full-repository fallback was run.'};
+  }
   const {context,projectId,scope,created}=preparedConfig(root,folder,configFile);
   const mine=mineProject(context,projectId,{codePaths:selected,
     minFiles:options.minFiles??3,maxFiles:options.maxFiles??20000,
@@ -90,9 +103,9 @@ export function quickstartProject(options){
   writeJson(reportPath,publicMineReport(mine));
   let enrichment={status:'NOT_REQUESTED'};
   if(options.enrich){
-    enrichment=mine.coverage.complete&&!rootFallback
+    enrichment=mine.coverage.complete&&mine.analyzedFiles>0
       ?{status:'CANDIDATES_IMPORTED',...enrichMine(context,mine)}
-      :{status:'NOT_APPLIED_INCOMPLETE',reason:rootFallback?'react-apps was not found; select --source-path before importing candidates':'Fix coverage.gaps, then rerun'};
+      :{status:'NOT_APPLIED_INCOMPLETE',reason:'No complete analyzable React sources; fix mining.coverage.gaps before enriching.'};
   }
   let semantic={status:'NOT_REQUESTED'},semanticPath=null;
   if(options.semantic){
@@ -109,7 +122,7 @@ export function quickstartProject(options){
       semantic={status:reviewed.status,exitCode:reviewed.exitCode,coverage:reviewed.coverage,report:semanticPath};
     }
   }
-  const status=rootFallback?'SOURCE_ROOT_UNCERTAIN':!mine.coverage.complete?'INCOMPLETE_MINING':
+  const status=!mine.coverage.complete||mine.analyzedFiles===0?'INCOMPLETE_MINING':
     semantic.status==='INCOMPLETE'?'INCOMPLETE_SEMANTIC':
     semantic.status==='NOT_RUN_AMBIGUOUS_TSCONFIG'?'SEMANTIC_REQUIRES_CONFIG':
     semantic.exitCode===1?'VIOLATIONS':
@@ -120,8 +133,7 @@ export function quickstartProject(options){
     existingPolicyPreserved:!created,
     firstTimeCatalog:created?{
       warning:'A new empty catalog was created. Any existing policy elsewhere must be selected using --config; it was not imported.'}:null,
-    sourceDiscovery:rootFallback?{reason:'REACT_APPS_NOT_FOUND',action:'Pass --source-path with the actual React source folder; no enrichment was applied'}:
-      {mode:options.sourcePaths?.length?'EXPLICIT':'AUTO_REACT_APPS'},
+    sourceDiscovery,
     mining:{report:reportPath,status:mine.status,analyzedFiles:mine.analyzedFiles,
       patternCount:mine.patterns.length,coverage:mine.coverage},
     enrichment,semantic,

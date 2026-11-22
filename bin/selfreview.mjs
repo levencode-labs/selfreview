@@ -25,6 +25,7 @@ learn --scope NAME [--docs FILE_OR_FOLDER ...] [--mr FILE ...]
 mine --project ID [--code FOLDER ...] [--min-files 3]
      [--max-files 20000] [--max-patterns 60] [--out REPORT.json] [--enrich]
 quickstart --project-path FOLDER [--data-dir FOLDER] [--source-path FOLDER ...]
+           [--discover-only]  # recursive React package.json inventory, no code scan
            [--enrich] [--semantic] [--tsconfig FILE] [--max-semantic-files 4000]
 semantic --project ID [--code FOLDER ...] [--tsconfig FILE]
          [--semantic-profile FILE] [--max-semantic-files 4000] [--out FILE]
@@ -60,7 +61,7 @@ No AI API or network requests; no execution of inspected project code.
 
 function argumentsOf(args) {
   const positional=[],options={};
-  const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only','enrich','semantic']);
+  const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only','enrich','semantic','discover-only']);
   const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','min-files','max-files','max-patterns','knowledge','tsconfig','semantic-profile','max-semantic-files','semantic-code','project-path','data-dir','source-path','by','reason','format','out','base','file','input']);
   for (let i=0;i<args.length;i++) {
     const arg=args[i];
@@ -135,7 +136,8 @@ export function main(args=process.argv.slice(2)) {
     };
     const result=quickstartProject({
       projectPath:absolute,dataDir,configPath:one(options,'config'),
-      sourcePaths:options['source-path']??[],enrich:!!options.enrich,semantic:!!options.semantic,
+      sourcePaths:options['source-path']??[],discoverOnly:!!options['discover-only'],
+      enrich:!!options.enrich,semantic:!!options.semantic,
       tsconfig:one(options,'tsconfig'),semanticProfile:one(options,'semantic-profile'),
       minFiles:numeric('min-files',3),maxFiles:numeric('max-files',20000),
       maxPatterns:numeric('max-patterns',100),maxSemanticFiles:numeric('max-semantic-files',4000),
