@@ -71,5 +71,6 @@ export function createAgentPack(context,catalog,report) {
     configHash:context.hash,catalogHash:digest(catalog),project:report.project,scope:report.scope,approvedRules:taskContext.approvedRules,
     candidateQuestions:taskContext.candidateQuestions,context:taskContext,report,
     reportBinding:bindReportToContext(report,taskContext),
+    semanticKnowledge:report.semantic??null,
     responseContract:{summary:'Findings grouped by confirmed convention, advisory and manual review; include source file and line.',proposals:'New conventions are candidate proposals with evidence, never automatic approvals.',verification:'List checks run, not run and incomplete; do not claim full correctness from AST.'}};
 }
