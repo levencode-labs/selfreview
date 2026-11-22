@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { loadConfig, loadCatalog } from '../src/config.mjs';
 import { mineProject, enrichMine, publicMineReport, readMineKnowledge } from '../src/mine.mjs';
 import { approveRule } from '../src/rules.mjs';
@@ -150,4 +152,29 @@ test('changed evidence after mining is not imported as a fresh rule',t=>{
   fs.appendFileSync(path.join(f.apps,'app-one','Component0.tsx'),'\n// drift\n');
   assert.throws(()=>enrichMine(f.context,report),/MINING_SOURCE_CHANGED/);
   assert.equal(loadCatalog(f.context).rules.length,0);
+});
+
+test('CLI mine, enrich and agent-pack --knowledge round-trip on real temp files',t=>{
+  const f=fixture(t);
+  const cli=fileURLToPath(new URL('../bin/selfreview.mjs',import.meta.url));
+  const report=path.join(f.temp,'mine.json');
+  const enriched=path.join(f.temp,'enriched.json');
+  const pack=path.join(f.temp,'pack.json');
+  function cmd(args) {
+    const result=spawnSync(process.execPath,[cli,...args],{encoding:'utf8',timeout:30000});
+    assert.equal(result.status,0,result.stderr || result.stdout);
+  }
+  const base=['--config',f.configPath,'--project','bily'];
+  const scan=['mine',...base,'--code',f.apps,'--min-files','3'];
+  cmd([...scan,'--out',report]);
+  assert.equal(JSON.parse(fs.readFileSync(report,'utf8')).status,'OBSERVED_PATTERNS');
+  assert.equal(loadCatalog(f.context).rules.length,0);
+  cmd([...scan,'--enrich','--out',enriched]);
+  const outcome=JSON.parse(fs.readFileSync(enriched,'utf8'));
+  assert.ok(outcome.enrichment.added.length>0);
+  cmd(['agent-pack',...base,'--knowledge',report,'--out',pack]);
+  const payload=JSON.parse(fs.readFileSync(pack,'utf8'));
+  assert.equal(payload.minedKnowledge.status,'ADVISORY_SNAPSHOT_NOT_REVALIDATED');
+  assert.ok(payload.candidateQuestions);
+  assert.equal(payload.minedKnowledge.datasetSha256,outcome.datasetSha256);
 });
