@@ -136,3 +136,22 @@ test('root without known React manifests is not scanned even if it contains many
   assert.equal(report.mining.analyzedFiles,0);
   assert.equal(report.enrichment.status,'NOT_APPLIED_UNVERIFIED_ROOTS');
 });
+
+test('discover-only lists deep package candidates without parsing source or creating a policy',t=>{
+  const f=fixture(t);
+  f.manifest('Web/Platform/Products/Marketing/ReactApp',{react:'^18'});
+  f.put('Web/Platform/Products/Marketing/ReactApp/src/Invalid.tsx','invalid => <>');
+  const output=quick(f,'--discover-only','--enrich','--semantic');
+  assert.equal(output.status,0,output.stderr||output.stdout);
+  const result=JSON.parse(output.stdout);
+  assert.equal(result.mode,'quickstart-discovery');
+  assert.equal(result.status,'REACT_PACKAGES_DISCOVERED');
+  assert.equal(result.sourceCodeAnalyzed,false);
+  assert.equal(result.catalogChanged,false);
+  assert.equal(result.configCreated,false);
+  assert.equal(result.sourceDiscovery.matches.length,1);
+  assert.deepEqual(result.codeRoots,
+    [path.join(f.root,'Web','Platform','Products','Marketing','ReactApp')]);
+  assert.equal(fs.existsSync(path.join(f.data,'selfreview.config.json')),false);
+  assert.equal(fs.existsSync(path.join(f.data,'react-apps.mine.json')),false);
+});
