@@ -143,3 +143,11 @@ test('import binding evidence is syntax-only, and no project module code is ever
   assert.equal(report.patterns.some(row=>row.value.includes('PROJECT_CODE_EXECUTED')),false);
   assert.ok(report.datasetSha256);
 });
+
+test('changed evidence after mining is not imported as a fresh rule',t=>{
+  const f=fixture(t);
+  const report=run(f);
+  fs.appendFileSync(path.join(f.apps,'app-one','Component0.tsx'),'\n// drift\n');
+  assert.throws(()=>enrichMine(f.context,report),/MINING_SOURCE_CHANGED/);
+  assert.equal(loadCatalog(f.context).rules.length,0);
+});
