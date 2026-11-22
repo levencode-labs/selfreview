@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { analyzeSource } from './ast.mjs';
+import { reviewProjectSemantics } from './semantic.mjs';
 import { parseUnifiedDiff } from './diff.mjs';
 import { projectInfo, resolveRules, validateCatalog } from './config.mjs';
 import { compareFindings, effectivePolicy } from './baseline.mjs';
@@ -206,6 +207,38 @@ export function reviewProject(context, catalog, projectId, options = {}) {
       findings = baseline.newFindings;
     }
   }
+  let semantic = null;
+  if (options.semantic && !selected.length) {
+    semantic = {schemaVersion:1,kind:'selfreview-semantic-review',project:projectId,
+      scope:project.scope,status:'NOT_APPLICABLE',exitCode:0,findings:[],errors:[],
+      coverage:{sourceFiles:0,focusFiles:0,graphEdges:0,fullProjectTypeCheck:false,
+        complete:false,newOnlyProven:false,noProjectExecution:true},
+      limitations:['No JS/TS files were selected. Semantic checks were not run.']};
+  }
+  if (options.semantic && selected.length) {
+    try {
+      const changedRanges = diff && !fullReviewReason
+        ? new Map([...touched].map(([name,value]) => [name,value.touchedRanges]))
+        : null;
+      semantic = reviewProjectSemantics(context,catalog,projectId,{
+        ...options.semantic,
+        selectedPaths:selected.map(file=>file.path),
+        changedRanges,staged:Boolean(git?.staged),newOnly,
+      });
+      if (semantic.errors.length) errors.push({
+        reason:'SEMANTIC_REVIEW_INCOMPLETE',message:semantic.errors.map(error=>error.reason).join(', '),
+      });
+      if (!newOnly) {
+        findings.push(...semantic.findings);
+        for (const finding of semantic.findings) {
+          activeRuleIds.add(finding.ruleId);
+          if (finding.mode==='enforce'&&finding.severity==='error') enforceRuleIds.add(finding.ruleId);
+        }
+      }
+    } catch (error) {
+      errors.push({reason:'SEMANTIC_REVIEW_FAILED',message:error.message});
+    }
+  }
   if (git) {
     if (!git.verifyIndex()) errors.push({ reason: 'INDEX_CHANGED_DURING_REVIEW' });
     if (!git.staged) {
@@ -232,16 +265,17 @@ export function reviewProject(context, catalog, projectId, options = {}) {
   const status = errors.length ? 'INCOMPLETE' : blocking ? 'VIOLATIONS' : emptyDiff ? 'NO_CHANGES' : notApplicable ? 'NOT_APPLICABLE' : manual.size ? 'MANUAL_REVIEW_REQUIRED' : !enforceRuleIds.size ? 'ADVISORY_ONLY' : 'CHECKS_PASSED';
   return {
     schemaVersion: 1, tool: { name: 'SelfReview', version: VERSION }, project: project.id, scope: project.scope,
-    status, exitCode: errors.length ? 2 : blocking ? 1 : 0, authority: 'STATIC_SYNTAX_ONLY',
+    status, exitCode: errors.length ? 2 : blocking ? 1 : 0, authority: semantic ? 'STATIC_SYNTAX_AND_OPT_IN_SEMANTIC' : 'STATIC_SYNTAX_ONLY',
     resultScope: fullReviewReason ? 'full-project-policy-review' : baseline?.newOnlyApplied ? 'changed-files-baseline' : diff ? 'changed-node-ranges' : 'selected-files',
     selection: fullReviewReason || (!diff && !requested) ? { mode: 'project' } : diff ? { mode: 'diff', paths: [...new Set(pairs.flatMap(file => [file.oldPath, file.newPath]).filter(Boolean))].sort() } : { mode: 'files', paths: [...requested].sort() },
     diffCorrelation: diff ? git ? 'LOCAL_GIT_DIFF' : 'SUPPLIED_NEW_SIDE_LINES_ONLY' : null,
     ...(git ? { git: git.metadata, policyComparison: { ...policy, errors: undefined }, fullReviewReason } : {}),
     ...(baseline ? { baseline } : {}),
+    ...(semantic ? { semantic } : {}),
     configHash: context.hash, catalogHash: digest(catalog), generatedAt: new Date().toISOString(), durationMs: Math.round(performance.now() - started),
-    coverage: { discoveredFiles: inventory.files.length, selectedFiles: selected.length, parsedFiles, activeRules: activeRuleIds.size, enforcedAstRules: enforceRuleIds.size, candidateRulesNotEnforced: candidateIds.size, manualRules: manual.size, skippedFiles: skipped.length, fullProjectTypeCheck: false, runtimeTests: false },
+    coverage: { discoveredFiles: inventory.files.length, selectedFiles: selected.length, parsedFiles, activeRules: activeRuleIds.size, enforcedAstRules: enforceRuleIds.size, candidateRulesNotEnforced: candidateIds.size, manualRules: manual.size, skippedFiles: skipped.length, semanticFindings: semantic?.findings.length ?? 0, fullProjectTypeCheck: semantic?.coverage.fullProjectTypeCheck ?? false, runtimeTests: false },
     findings, errors, skipped, suppressed, manualChecklist: [...manual.values()], sources,
-    limitations: ['Only configured JS/TS syntax checks are evaluated; no proof of architecture, business logic, type safety or runtime correctness.', baseline?.newOnlyApplied ? 'New/existing attribution uses occurrence matching under the same current policy; it is not semantic equivalence.' : 'Changed-node findings may predate this change; use an eligible Git new-only comparison for occurrence attribution.', 'Natural-language conventions require an agent or human review; candidate rules are not enforced.'],
+    limitations: [semantic?'Semantic analysis is bounded to explicitly selected project source roots and may report INCOMPLETE.':'Only configured JS/TS syntax checks are evaluated; no proof of architecture, business logic, type safety or runtime correctness.', baseline?.newOnlyApplied ? 'New/existing attribution uses occurrence matching under the same current policy; it is not semantic equivalence.' : 'Changed-node findings may predate this change; use an eligible Git new-only comparison for occurrence attribution.', 'Natural-language conventions require an agent or human review; candidate rules are not enforced.'],
     warnings: diff?.warnings ?? [],
   };
 }
@@ -249,6 +283,7 @@ export function reviewProject(context, catalog, projectId, options = {}) {
 export function renderReport(report) {
   const lines = [`SelfReview ${VERSION} | ${report.project} | scope: ${report.scope}`, `${report.status} | exit ${report.exitCode} | ${report.authority}`,
     `Files: ${report.coverage.parsedFiles}/${report.coverage.selectedFiles} parsed; enforced AST rules: ${report.coverage.enforcedAstRules}; candidates: ${report.coverage.candidateRulesNotEnforced}; manual: ${report.coverage.manualRules}`];
+  if (report.semantic) lines.push('Semantic: '+report.semantic.status+'; source files '+report.semantic.coverage.sourceFiles+'; graph edges '+report.semantic.coverage.graphEdges+'; typed findings '+report.semantic.findings.length+'.');
   if (report.git) lines.push(`Git: ${report.git.baseMode} ${report.git.requestedBase} -> ${report.git.baseCommit}; target: ${report.git.target}`);
   if (report.fullReviewReason) lines.push(`Full project review: ${report.fullReviewReason}; new-only gating is not applied.`);
   if (report.baseline?.counts) lines.push(`Baseline: ${report.baseline.counts.new} new, ${report.baseline.counts.existing} existing, ${report.baseline.counts.resolved} resolved; occurrence matching, not semantic proof.`);
@@ -268,6 +303,6 @@ export function renderReport(report) {
   if (report.status === 'NOT_APPLICABLE') lines.push('No applicable JS/TS postimages in this selection; no code checks were claimed.');
   else if (!report.findings.length) lines.push('No findings from the evaluated checks. This is not a guarantee of overall code quality.');
   if (report.resultScope === 'changed-node-ranges') lines.push('Diff mode: findings touch changed nodes; they are not proven newly introduced.');
-  lines.push('Coverage: JS/TS syntax only. Build, types, tests, runtime and semantic review remain separate.');
+  lines.push(report.semantic ? 'Coverage: bounded TypeScript semantics and source-backed edges; no runtime execution. Inspect semantic.errors and UNKNOWN.' : 'Coverage: JS/TS syntax only. Build, types, tests, runtime and semantic review remain separate.');
   return lines.join('\n') + '\n';
 }
