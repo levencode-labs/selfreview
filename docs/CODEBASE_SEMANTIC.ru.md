@@ -1,5 +1,32 @@
 # SelfReview P2 — Semantic TypeScript/React
 
+## Самый простой запуск: одна команда
+
+В обычном PowerShell на Windows **после принятия P2 в main**:
+
+~~~powershell
+Set-Location 'C:\Users\levenskikh\Desktop\MyProjects\selfreview'
+npm.cmd ci --ignore-scripts
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy'
+~~~
+
+Будет автоматически найдена папка react-apps (на глубине до 3 папок), выбран или создан локальный каталог SelfReview, а отчёт появится в \`C:\Users\levenskikh\Desktop\selfreview-data\billy\react-apps.mine.json\`. По умолчанию это read-only. При повторном запуске существующий каталог не перезаписывается.
+
+Чтобы **обогатить каталог кандидатами** и при желании запустить P2:
+
+~~~powershell
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy' --enrich --semantic
+~~~
+
+Если твои утверждённые правила находятся в **другом** каталоге, передай **точный существующий** \`--config\` вместо создания нового, иначе quickstart не сможет их угадать:
+
+~~~powershell
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy' --config 'C:\PATH\TO\EXISTING\selfreview.config.json' --enrich --semantic
+~~~
+
+Сначала проверь \`configCreated\`, \`mining.coverage\`, \`semantic.coverage\` и \`sourceDiscovery\` в выводе. Если нужно явно указать исходники, добавь \`--source-path 'C:\Users\levenskikh\Desktop\billy\react-apps'\`. Если несколько несовместимых tsconfig, программа откажется выбирать случайный и покажет список; тогда выбери конкретный \`--tsconfig\` и анализируй apps отдельно. \`INCOMPLETE\` не означает «правила проверены».
+
+
 P2 runs an opt-in bounded TypeScript Program and a source-backed internal import graph on explicitly selected source directories. It adds direct React-import hook placement checks, locally typed JSX props, architecture boundary policies and potential top-level invocation observations. It never runs target app code or project plugins.
 
 ## Windows PowerShell — BILLY
