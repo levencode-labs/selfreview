@@ -73,6 +73,14 @@ export function quickstartProject(options){
     'A new quickstart config must be created inside --data-dir; use --config to reuse an existing policy anywhere');
   const sourceDiscovery=projectRoots(root,options.sourcePaths);
   const selected=sourceDiscovery.codeRoots;
+  if(options.discoverOnly){
+    const status=!sourceDiscovery.complete?'SOURCE_DISCOVERY_INCOMPLETE':
+      selected.length?'REACT_PACKAGES_DISCOVERED':'SOURCE_ROOT_UNCERTAIN';
+    return {schemaVersion:1,mode:'quickstart-discovery',status,exitCode:status==='REACT_PACKAGES_DISCOVERED'?0:2,
+      projectRoot:root,codeRoots:selected,config:configFile,sourceDiscovery,
+      sourceCodeAnalyzed:false,configCreated:false,catalogChanged:false,
+      next:'Inspect sourceDiscovery.matches, then rerun without --discover-only to perform AST mining.'};
+  }
   if(!sourceDiscovery.complete || !selected.length) {
     const incomplete=!sourceDiscovery.complete;
     const status=incomplete?'SOURCE_DISCOVERY_INCOMPLETE':'SOURCE_ROOT_UNCERTAIN';
