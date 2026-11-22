@@ -191,3 +191,64 @@ test('CLI standalone semantic report and diff-aware review are distinct surfaces
   assert.equal(after.authority,'STATIC_SYNTAX_AND_OPT_IN_SEMANTIC');
   assert.ok(after.findings.some(x=>x.semanticKind==='react-hook-placement'));
 });
+
+test('inline type-only imports and re-exports cannot become runtime architecture violations',t=>{
+  const f=fixture(t);
+  f.put('react-apps/modern/TypeOnly.ts',
+    "import { type LegacyType } from '../legacy/Legacy';\n"+
+    "export { type LegacyType } from '../legacy/Legacy';\n"+
+    "export const ready = true;\n");
+  const profile=withPolicy(f,{boundaries:[{from:'react-apps/modern/**/*',to:'react-apps/legacy/**/*'}]});
+  const result=run(f,{profile});
+  const related=result.graph.edges.filter(edge=>edge.from.endsWith('/TypeOnly.ts'));
+  assert.equal(related.length,2);
+  assert.ok(related.every(edge=>edge.typeOnly));
+  assert.deepEqual(result.findings.filter(item=>item.semanticKind==='architecture-boundary')
+    .map(item=>item.path),['react-apps/modern/Bad.tsx']);
+});
+
+test('shadowed require and type-only react hook are UNKNOWN rather than false runtime import or hook findings',t=>{
+  const f=fixture(t);
+  f.put('react-apps/modern/ShadowedRequire.ts',
+    "export function get(require: (key:string)=>unknown) { return require('../legacy/Legacy'); }\n");
+  f.put('react-apps/modern/TypeHook.tsx',
+    "import type { useEffect as effect } from 'react';\n"+
+    "export function TypeHook() { if(true) effect(()=>{},[]); return <div />; }\n");
+  const result=run(f);
+  assert.equal(result.graph.edges.filter(edge=>edge.from.endsWith('/ShadowedRequire.ts')).length,0);
+  assert.ok(result.graph.unknown.some(item=>item.reason==='SHADOWED_REQUIRE_UNMODELED'));
+  assert.ok(result.findings.every(item=>!item.path.endsWith('/TypeHook.tsx')));
+});
+
+test('ambiguous union JSX props are not considered unknown named attributes',t=>{
+  const f=fixture(t);
+  f.put('react-apps/modern/Union.tsx',
+    "type A = {kind:'a'; alpha:string}; type B = {kind:'b'; beta:number};\n"+
+    "export function Union(props: A|B) { return <div />; }\n");
+  f.put('react-apps/modern/UnionUse.tsx',
+    "import {Union} from './Union';\n"+
+    "export function UnionUse(){ return <Union kind=\"a\" alpha=\"ok\" />; }\n");
+  const result=run(f);
+  assert.equal(result.findings.some(item=>item.path.endsWith('/UnionUse.tsx')&&
+    item.semanticKind==='jsx-unknown-prop'),false);
+});
+
+test('profile evidence must be both current and referenced by the approved source rule',t=>{
+  const f=fixture(t);
+  const profile=withPolicy(f,{boundaries:[{from:'react-apps/modern/**/*',to:'react-apps/legacy/**/*'}]});
+  f.put('docs/unrelated.md','unrelated');
+  const input=JSON.parse(fs.readFileSync(profile,'utf8'));
+  input.boundaryRules[0].evidence={path:'docs/unrelated.md',sha256:sha256('unrelated')};
+  writeJson(profile,input);
+  assert.throws(()=>run(f,{profile}),/not part of the approved rule/);
+});
+
+test('docs-only supplied diff remains not applicable even when semantic mode is enabled',t=>{
+  const f=fixture(t);
+  f.put('README.md','current text\n');
+  const diff="diff --git a/README.md b/README.md\n--- a/README.md\n+++ b/README.md\n@@ -1 +1 @@\n-old text\n+current text\n";
+  const report=reviewProject(f.context,loadCatalog(f.context),'billy',{diffText:diff,semantic:opts(f)});
+  assert.equal(report.status,'NOT_APPLICABLE');
+  assert.equal(report.semantic.status,'NOT_APPLICABLE');
+  assert.equal(report.semantic.coverage.sourceFiles,0);
+});
