@@ -12,6 +12,14 @@ node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop
 
 SelfReview рекурсивно найдёт все доступные \`package.json\` вне директорий сборки, отберёт пакеты с React-зависимостями и запишет их список и признаки определения в \`sourceDiscovery.matches\`. Глубина не ограничена тремя уровнями; действует защитный предел обхода. Никакого сканирования всего BILLY при неудачном обнаружении больше нет. Отчёт появится по адресу \`C:\Users\levenskikh\Desktop\selfreview-data\billy\react-apps.mine.json\`. При повторном запуске существующий каталог не перезаписывается.
 
+Для большого BILLY сначала проверь обнаруженные каталоги, не читая исходники и не изменяя каталог правил:
+
+~~~powershell
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy' --discover-only
+~~~
+
+Поле `sourceDiscovery.matches` покажет пути к вложенным React-пакетам, SHA-256 соответствующих `package.json` и признаки React-зависимостей. При неполном обнаружении команда возвращает exit 2 и не запускает сканирование всего монорепозитория.
+
 Чтобы **обогатить каталог кандидатами** и при желании запустить P2:
 
 ~~~powershell
