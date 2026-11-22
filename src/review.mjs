@@ -208,7 +208,14 @@ export function reviewProject(context, catalog, projectId, options = {}) {
     }
   }
   let semantic = null;
-  if (options.semantic) {
+  if (options.semantic && !selected.length) {
+    semantic = {schemaVersion:1,kind:'selfreview-semantic-review',project:projectId,
+      scope:project.scope,status:'NOT_APPLICABLE',exitCode:0,findings:[],errors:[],
+      coverage:{sourceFiles:0,focusFiles:0,graphEdges:0,fullProjectTypeCheck:false,
+        complete:false,newOnlyProven:false,noProjectExecution:true},
+      limitations:['No JS/TS files were selected. Semantic checks were not run.']};
+  }
+  if (options.semantic && selected.length) {
     try {
       const changedRanges = diff && !fullReviewReason
         ? new Map([...touched].map(([name,value]) => [name,value.touchedRanges]))
