@@ -252,3 +252,14 @@ test('docs-only supplied diff remains not applicable even when semantic mode is 
   assert.equal(report.semantic.status,'NOT_APPLICABLE');
   assert.equal(report.semantic.coverage.sourceFiles,0);
 });
+
+test('computed dynamic imports invalidate graph completeness, never certify full type checking',t=>{
+  const f=fixture(t);
+  f.put('react-apps/modern/Lazy.ts',
+    "export async function lazy(name: string) { return import(name); }\n");
+  const result=run(f);
+  assert.equal(result.status,'INCOMPLETE');
+  assert.ok(result.graph.unknown.some(x=>x.reason==='DYNAMIC_SPECIFIER'));
+  assert.equal(result.coverage.fullProjectTypeCheck,false);
+  assert.ok(result.errors.some(x=>x.reason==='SEMANTIC_GRAPH_PARTIAL'));
+});
