@@ -133,12 +133,13 @@ function reactImports(sf,checker){
   for(const stmt of sf.statements){
     if(!ts.isImportDeclaration(stmt)||!ts.isStringLiteral(stmt.moduleSpecifier)||stmt.moduleSpecifier.text!=='react')continue;
     const clause=stmt.importClause;
+    if(clause?.isTypeOnly)continue;
     if(clause?.name)namespaces.set(clause.name.text,checker.getSymbolAtLocation(clause.name));
     const bindings=clause?.namedBindings;
     if(bindings&&ts.isNamespaceImport(bindings))namespaces.set(bindings.name.text,checker.getSymbolAtLocation(bindings.name));
     if(bindings&&ts.isNamedImports(bindings))for(const element of bindings.elements){
       const imported=element.propertyName?.text??element.name.text;
-      if(/^use[A-Z]/.test(imported))named.set(element.name.text,{name:imported,symbol:checker.getSymbolAtLocation(element.name)});
+      if(!element.isTypeOnly&&/^use[A-Z]/.test(imported))named.set(element.name.text,{name:imported,symbol:checker.getSymbolAtLocation(element.name)});
     }
   }
   return {named,namespaces};
@@ -191,7 +192,7 @@ function localTypedProps(sf,checker,node,known){
   const parameter=signatures[0].getParameters()[0];
   if(!parameter)return [];
   const props=checker.getTypeOfSymbolAtLocation(parameter,node.tagName);
-  if(props.flags&(ts.TypeFlags.Any|ts.TypeFlags.Unknown|ts.TypeFlags.TypeParameter))return [];
+  if(props.flags&(ts.TypeFlags.Any|ts.TypeFlags.Unknown|ts.TypeFlags.TypeParameter|ts.TypeFlags.Union|ts.TypeFlags.Intersection|ts.TypeFlags.Conditional))return [];
   if(checker.getIndexInfoOfType(props,ts.IndexKind.String)||checker.getIndexInfoOfType(props,ts.IndexKind.Number))return [];
   const allowed=new Set(checker.getPropertiesOfType(props).map(x=>x.getName()));
   return node.attributes.properties.filter(attr=>ts.isJsxAttribute(attr)).filter(attr=>{
