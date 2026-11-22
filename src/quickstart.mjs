@@ -85,7 +85,7 @@ export function quickstartProject(options){
       semantic:{status:'NOT_RUN_UNVERIFIED_ROOTS'},
       next:incomplete?
         'Resolve sourceDiscovery.coverage.gaps; no catalog changes or source analysis were performed.':
-        'No React-related package.json was detected. Pass --source-path with an explicit React source directory; no whole-repository fallback was run.'};
+        'No safe React package roots selected. Inspect sourceDiscovery.matches/omitted or pass --source-path; no full-repository fallback was run.'};
   }
   const {context,projectId,scope,created}=preparedConfig(root,folder,configFile);
   const mine=mineProject(context,projectId,{codePaths:selected,
