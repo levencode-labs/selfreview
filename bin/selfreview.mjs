@@ -7,6 +7,7 @@ import { reviewProject, renderReport, diffFromGit } from '../src/review.mjs';
 import { learnScope, refreshScope } from '../src/learn.mjs';
 import { mineProject, enrichMine, publicMineReport, readMineKnowledge } from '../src/mine.mjs';
 import { reviewProjectSemantics } from '../src/semantic.mjs';
+import { quickstartProject } from '../src/quickstart.mjs';
 import { sourceStatus, ruleHistory, previewRule, recordRuleDecision } from '../src/lifecycle.mjs';
 import { createTaskContext, checkTaskContext } from '../src/context.mjs';
 import { exportScope, createAgentPack } from '../src/export.mjs';
@@ -23,6 +24,8 @@ learn --scope NAME [--docs FILE_OR_FOLDER ...] [--mr FILE ...]
       [--code FOLDER ...] [--min-samples 5] [--threshold 0.9]
 mine --project ID [--code FOLDER ...] [--min-files 3]
      [--max-files 20000] [--max-patterns 60] [--out REPORT.json] [--enrich]
+quickstart --project-path FOLDER [--data-dir FOLDER] [--source-path FOLDER ...]
+           [--enrich] [--semantic] [--tsconfig FILE] [--max-semantic-files 4000]
 semantic --project ID [--code FOLDER ...] [--tsconfig FILE]
          [--semantic-profile FILE] [--max-semantic-files 4000] [--out FILE]
 rules list [--scope NAME] [--json]
@@ -58,7 +61,7 @@ No AI API or network requests; no execution of inspected project code.
 function argumentsOf(args) {
   const positional=[],options={};
   const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only','enrich','semantic']);
-  const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','min-files','max-files','max-patterns','knowledge','tsconfig','semantic-profile','max-semantic-files','semantic-code','by','reason','format','out','base','file','input']);
+  const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','min-files','max-files','max-patterns','knowledge','tsconfig','semantic-profile','max-semantic-files','semantic-code','project-path','data-dir','source-path','by','reason','format','out','base','file','input']);
   for (let i=0;i<args.length;i++) {
     const arg=args[i];
     if (!arg.startsWith('--')) {positional.push(arg);continue;}
@@ -122,6 +125,24 @@ export function main(args=process.argv.slice(2)) {
   if(options.version){console.log(VERSION);return 0;}
   if(options.help||!command||command==='help'){console.log(HELP);return 0;}
   const configPath=path.resolve(one(options,'config','selfreview.config.json'));
+  if(command==='quickstart'){
+    const projectPath=one(options,'project-path');
+    assert(projectPath,'quickstart requires --project-path');
+    const absolute=fs.realpathSync(path.resolve(projectPath));
+    const dataDir=one(options,'data-dir',path.join(path.dirname(absolute),'selfreview-data',path.basename(absolute)));
+    const numeric=(key,fallback)=>{
+      const v=one(options,key,String(fallback));assert(/^\d+$/.test(v),'Invalid --'+key);return Number(v);
+    };
+    const result=quickstartProject({
+      projectPath:absolute,dataDir,configPath:one(options,'config'),
+      sourcePaths:options['source-path']??[],enrich:!!options.enrich,semantic:!!options.semantic,
+      tsconfig:one(options,'tsconfig'),semanticProfile:one(options,'semantic-profile'),
+      minFiles:numeric('min-files',3),maxFiles:numeric('max-files',20000),
+      maxPatterns:numeric('max-patterns',100),maxSemanticFiles:numeric('max-semantic-files',4000),
+    });
+    output(result,options,{text:JSON.stringify(result,null,2)+'\n'});
+    return result.exitCode;
+  }
   if(command==='init') {
     assert(!fs.existsSync(configPath),'Config already exists. Use scope add or edit the existing config.');
     const scope=one(options,'scope','default'),baseDir=path.dirname(configPath),catalogPath=path.join(baseDir,'.selfreview','catalog.json');
