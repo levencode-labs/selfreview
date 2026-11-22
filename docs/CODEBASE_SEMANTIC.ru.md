@@ -10,7 +10,7 @@ npm.cmd ci --ignore-scripts
 node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy'
 ~~~
 
-Будет автоматически найдена папка react-apps (на глубине до 3 папок), выбран или создан локальный каталог SelfReview, а отчёт появится в \`C:\Users\levenskikh\Desktop\selfreview-data\billy\react-apps.mine.json\`. По умолчанию это read-only. При повторном запуске существующий каталог не перезаписывается.
+SelfReview рекурсивно найдёт все доступные \`package.json\` вне директорий сборки, отберёт пакеты с React-зависимостями и запишет их список и признаки определения в \`sourceDiscovery.matches\`. Глубина не ограничена тремя уровнями; действует защитный предел обхода. Никакого сканирования всего BILLY при неудачном обнаружении больше нет. Отчёт появится по адресу \`C:\Users\levenskikh\Desktop\selfreview-data\billy\react-apps.mine.json\`. При повторном запуске существующий каталог не перезаписывается.
 
 Чтобы **обогатить каталог кандидатами** и при желании запустить P2:
 
