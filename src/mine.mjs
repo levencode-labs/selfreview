@@ -201,7 +201,7 @@ function scanSources(project, roots, onFile, maxFiles) {
         continue;
       }
       if (entry.isDirectory()) {
-        if (!matches(rel + '/', ['**/*'], project.exclude)) visit(absolute, root);
+        if (matches(rel + '/', ['**/*'], project.exclude)) visit(absolute, root);
         continue;
       }
       if (!entry.isFile() || !matches(rel, project.include, project.exclude)) continue;
