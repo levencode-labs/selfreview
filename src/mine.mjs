@@ -10,6 +10,7 @@ import { mergeLearnedCandidates } from './lifecycle.mjs';
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_EXAMPLES = 8;
 const MAX_GROUPS = 200;
+const MAX_UNIQUE_PATTERNS = 100000;
 const MAX_KNOWLEDGE_BYTES = 8 * 1024 * 1024;
 const CODE_EXTENSIONS = new Set(EXTENSIONS);
 const safeLabel = value => String(value ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').slice(0, 180);
@@ -244,12 +245,20 @@ export function mineProject(context, projectId, options = {}) {
   const groups = new Map();
   const sources = [];
   const errors = [];
+  let patternLimitReported = false;
   const observeFor = file => (kind,value,line) => {
     const label = safeLabel(value);
     if (!label || label.length > 180) return;
     const key = JSON.stringify([kind,label]);
     let row = rows.get(key);
     if (!row) {
+      if (rows.size >= MAX_UNIQUE_PATTERNS) {
+        if (!patternLimitReported) {
+          patternLimitReported = true;
+          errors.push({path:file.relative,reason:'UNIQUE_PATTERN_LIMIT',maxUniquePatterns:MAX_UNIQUE_PATTERNS});
+        }
+        return;
+      }
       row = {kind,value:label,occurrences:0,files:new Set(),groups:new Set(),examples:[]};
       rows.set(key,row);
     }
@@ -335,6 +344,15 @@ export function enrichMine(context, report) {
     const key = absolute;
     inputsMap.set(key,{path:absolute,evidencePath:evidence.path,sha256:evidence.sha256,
       project:report.project,kind:'code',complete:true});
+  }
+  // Recheck every source we are about to register, before starting the catalog transaction.
+  // The full dataset may still drift: a later mining run is needed for a fresh census.
+  for (const input of inputsMap.values()) {
+    const stat = fs.lstatSync(input.path);
+    assert(stat.isFile() && !stat.isSymbolicLink() && stat.size <= MAX_FILE_BYTES,
+      'MINING_SOURCE_UNAVAILABLE: ' + input.path);
+    assert(sha256(fs.readFileSync(input.path)) === input.sha256,
+      'MINING_SOURCE_CHANGED: ' + input.path);
   }
   const merged = mutateCatalog(context,catalog =>
     mergeLearnedCandidates(context,catalog,report.scope,candidates,[...inputsMap.values()]));
