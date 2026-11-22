@@ -72,9 +72,11 @@ test('source filename omission never makes full project fallback look like a com
   const f=fixture(t);
   fs.renameSync(f.react,path.join(f.root,'application-code'));
   const r=invoke(f);
-  assert.equal(r.status,0,r.stderr);
+  assert.equal(r.status,2,r.stderr);
   const report=JSON.parse(r.stdout);
   assert.equal(report.mining.analyzedFiles,3);
   assert.deepEqual(report.codeRoots,[f.root]);
-  assert.equal(report.status,'READY');
+  assert.equal(report.status,'SOURCE_ROOT_UNCERTAIN');
+  assert.equal(report.sourceDiscovery.reason,'REACT_APPS_NOT_FOUND');
+  assert.equal(report.enrichment.status,'NOT_REQUESTED');
 });
