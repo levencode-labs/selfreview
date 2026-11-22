@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/levencode-labs/.github/main/assets/selfreview-mark.png" width="160" height="160" alt="SelfReview logo" />
+  <img src="assets/selfreview-banner.png" width="100%" alt="SelfReview — project conventions, AST checks and ESLint rules for JavaScript, TypeScript and React" />
 </p>
 
 # SelfReview
