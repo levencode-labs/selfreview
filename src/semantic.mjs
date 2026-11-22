@@ -78,6 +78,9 @@ function approvedProfile(context,catalog,project,filename){
     const stat=fs.lstatSync(evidence);
     assert(stat.isFile()&&!stat.isSymbolicLink()&&stat.size<=2*1024*1024,'Semantic evidence unavailable');
     assert(sha256(fs.readFileSync(evidence))===item.evidence.sha256,'Semantic policy evidence changed');
+    assert(rule.evidence.some(original=>original.path===item.evidence.path&&
+      original.sha256===item.evidence.sha256),
+      'Semantic profile evidence is not part of the approved rule');
     const globs=boundary?[item.from,item.to]:[item.module];
     for(const pattern of globs){assert(typeof pattern==='string','Semantic policy glob missing');matches('syntax-validation',[pattern],[]);}
     if(boundary)assert(item.includeTypeOnly===undefined||typeof item.includeTypeOnly==='boolean','Invalid includeTypeOnly');
@@ -196,6 +199,19 @@ function localTypedProps(sf,checker,node,known){
     return name!=='key'&&name!=='ref'&&!name.startsWith('data-')&&!name.startsWith('aria-')&&!allowed.has(name);
   });
 }
+function typeOnlyImport(statement) {
+  const clause=statement.importClause;
+  if(clause?.isTypeOnly)return true;
+  const bindings=clause?.namedBindings;
+  return !!bindings&&ts.isNamedImports(bindings)&&bindings.elements.length>0&&
+    bindings.elements.every(item=>item.isTypeOnly);
+}
+function typeOnlyExport(statement) {
+  if(statement.isTypeOnly)return true;
+  const clause=statement.exportClause;
+  return !!clause&&ts.isNamedExports(clause)&&clause.elements.length>0&&
+    clause.elements.every(item=>item.isTypeOnly);
+}
 function topLevelInvocations(sf){
   const nodes=[];
   for(const stmt of sf.statements){
@@ -236,7 +252,10 @@ export function reviewProjectSemantics(context,catalog,projectId,settings={}){
   const roots=codeRoots(project,settings.codePaths), options=compilerOptions(project,settings.tsconfig);
   const policy=approvedProfile(context,catalog,project,settings.profile);
   const inventory=inventoryFor(project,roots,maxFiles);
-  const errors=[...inventory.errors,...options.errors],unknown=[],edges=[],findings=[],indicators=[];
+  const errors=[...inventory.errors,...options.errors,
+    ...inventory.skipped.filter(item=>item.reason==='SYMLINK_NOT_FOLLOWED')
+      .map(item=>({path:item.path,reason:'SEMANTIC_SOURCE_SYMLINK_NOT_ANALYZED'}))],
+    unknown=[],edges=[],findings=[],indicators=[];
   const known=new Map(inventory.files.map(file=>[file.absolute,{...file,project:project.id,scope:project.scope}]));
   const sources=[...known.values()];
   const host=compilerHost(options.options,sources,project);
@@ -300,13 +319,22 @@ export function reviewProjectSemantics(context,catalog,projectId,settings={}){
     }
     for(const stmt of sf.statements){
       if(ts.isImportDeclaration(stmt)&&ts.isStringLiteral(stmt.moduleSpecifier))
-        edge(file,sf,stmt.moduleSpecifier.text,stmt,'import',Boolean(stmt.importClause?.isTypeOnly));
+        edge(file,sf,stmt.moduleSpecifier.text,stmt,'import',typeOnlyImport(stmt));
       if(ts.isExportDeclaration(stmt)&&stmt.moduleSpecifier&&ts.isStringLiteral(stmt.moduleSpecifier))
-        edge(file,sf,stmt.moduleSpecifier.text,stmt,'re-export',Boolean(stmt.isTypeOnly));
+        edge(file,sf,stmt.moduleSpecifier.text,stmt,'re-export',typeOnlyExport(stmt));
     }
     const imports=reactImports(sf,checker);
     function visit(node){
       if(ts.isCallExpression(node)){
+        if(ts.isIdentifier(node.expression)&&node.expression.text==='require'){
+          const symbol=checker.getSymbolAtLocation(node.expression);
+          if(symbol?.declarations?.some(decl=>abs(decl.getSourceFile().fileName)===file.absolute)){
+            unknown.push({path:file.path,line:at(sf,node).startLine,reason:'SHADOWED_REQUIRE_UNMODELED'});
+          } else {
+            const arg=node.arguments[0];
+            edge(file,sf,arg&&ts.isStringLiteral(arg)?arg.text:null,node,'require');
+          }
+        }
         if(node.expression.kind===ts.SyntaxKind.ImportKeyword){
           const arg=node.arguments[0];
           edge(file,sf,arg&&ts.isStringLiteral(arg)?arg.text:null,node,'dynamic-import');
