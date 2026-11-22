@@ -27,6 +27,16 @@ The standalone frontend pack can be rebuilt and restored from a clone. [Frontend
 
 The backend pack reviews C# and SQL against a selected Git diff. [Backend Conventions](packs/backend-conventions/README.md)
 
+## One-command local onboarding (P2)
+
+From an installed SelfReview clone, run:
+
+```powershell
+node .\bin\selfreview.mjs quickstart --project-path 'C:\Users\levenskikh\Desktop\billy'
+```
+
+The command locates `react-apps`, creates a catalog only when none exists at the selected data location, and mines read-only AST observations. Add `--enrich` to import unapproved candidates and `--semantic` to opt into a bounded TypeScript import graph and React review. Existing approvals are not promoted or overwritten. If rules live in a different config, provide its exact path with `--config`. See [P2 semantic walkthrough](docs/CODEBASE_SEMANTIC.md) and [Russian commands](docs/CODEBASE_SEMANTIC.ru.md).
+
 ## Discover conventions from an existing React monorepo
 
 A source-wide, **read-only** `mine` command can now discover recurring AST motifs across React/TypeScript folders (imports, hooks, JSX component/prop usage, component styles and call shapes). Use `--enrich` only to add **unapproved manual/advisory candidates** to an existing rule catalog; approved rules are preserved. An optional `agent-pack --knowledge REPORT.json` embeds the observed project skeleton separately from confirmed policy.
