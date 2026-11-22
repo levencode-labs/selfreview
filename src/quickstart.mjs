@@ -78,8 +78,10 @@ export function quickstartProject(options){
   assert(!contained(root,folder),'Results must be outside the inspected project repository');
   assert(!contained(folder,root),'Project must not be inside the SelfReview output directory');
   const configFile=path.resolve(options.configPath??path.join(folder,'selfreview.config.json'));
-  assert(contained(folder,configFile),'--config must live in the selected --data-dir for this quickstart');
+  if(!fs.existsSync(configFile))assert(contained(folder,configFile),
+    'A new quickstart config must be created inside --data-dir; use --config to reuse an existing policy anywhere');
   const selected=projectRoots(root,options.sourcePaths);
+  const rootFallback=!options.sourcePaths?.length&&selected.length===1&&selected[0]===root;
   const {context,projectId,scope,created}=preparedConfig(root,folder,configFile);
   const mine=mineProject(context,projectId,{codePaths:selected,
     minFiles:options.minFiles??3,maxFiles:options.maxFiles??20000,
@@ -88,9 +90,9 @@ export function quickstartProject(options){
   writeJson(reportPath,publicMineReport(mine));
   let enrichment={status:'NOT_REQUESTED'};
   if(options.enrich){
-    enrichment=mine.coverage.complete
+    enrichment=mine.coverage.complete&&!rootFallback
       ?{status:'CANDIDATES_IMPORTED',...enrichMine(context,mine)}
-      :{status:'NOT_APPLIED_INCOMPLETE',reason:'Fix coverage.gaps, then rerun'};
+      :{status:'NOT_APPLIED_INCOMPLETE',reason:rootFallback?'react-apps was not found; select --source-path before importing candidates':'Fix coverage.gaps, then rerun'};
   }
   let semantic={status:'NOT_REQUESTED'},semanticPath=null;
   if(options.semantic){
@@ -107,7 +109,7 @@ export function quickstartProject(options){
       semantic={status:reviewed.status,exitCode:reviewed.exitCode,coverage:reviewed.coverage,report:semanticPath};
     }
   }
-  const status=!mine.coverage.complete?'INCOMPLETE_MINING':
+  const status=rootFallback?'SOURCE_ROOT_UNCERTAIN':!mine.coverage.complete?'INCOMPLETE_MINING':
     semantic.status==='INCOMPLETE'?'INCOMPLETE_SEMANTIC':
     semantic.status==='NOT_RUN_AMBIGUOUS_TSCONFIG'?'SEMANTIC_REQUIRES_CONFIG':
     'READY';
@@ -117,6 +119,8 @@ export function quickstartProject(options){
     existingPolicyPreserved:!created,
     firstTimeCatalog:created?{
       warning:'A new empty catalog was created. Any existing policy elsewhere must be selected using --config; it was not imported.'}:null,
+    sourceDiscovery:rootFallback?{reason:'REACT_APPS_NOT_FOUND',action:'Pass --source-path with the actual React source folder; no enrichment was applied'}:
+      {mode:options.sourcePaths?.length?'EXPLICIT':'AUTO_REACT_APPS'},
     mining:{report:reportPath,status:mine.status,analyzedFiles:mine.analyzedFiles,
       patternCount:mine.patterns.length,coverage:mine.coverage},
     enrichment,semantic,
