@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/levencode-labs/.github/main/assets/selfreview-mark.png" width="160" height="160" alt="SelfReview logo" />
+</p>
+
 # SelfReview
 
 [English](README.md) · [Русский](README.ru.md)
