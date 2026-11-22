@@ -5,6 +5,7 @@ import { loadConfig, loadCatalog, mutateCatalog, projectInfo, allScopeRules } fr
 import { approveRule, behaviorHash, KINDS } from '../src/rules.mjs';
 import { reviewProject, renderReport, diffFromGit } from '../src/review.mjs';
 import { learnScope, refreshScope } from '../src/learn.mjs';
+import { mineProject, enrichMine, publicMineReport, readMineKnowledge } from '../src/mine.mjs';
 import { sourceStatus, ruleHistory, previewRule, recordRuleDecision } from '../src/lifecycle.mjs';
 import { createTaskContext, checkTaskContext } from '../src/context.mjs';
 import { exportScope, createAgentPack } from '../src/export.mjs';
@@ -19,6 +20,8 @@ scope add NAME --project FOLDER [--project FOLDER ...] [--extends PARENT]
 learn --scope NAME [--docs FILE_OR_FOLDER ...] [--mr FILE ...]
       [--diff FILE --comments FILE] [--proposals JSON] [--no-code]
       [--code FOLDER ...] [--min-samples 5] [--threshold 0.9]
+mine --project ID [--code FOLDER ...] [--min-files 3]
+     [--max-files 20000] [--max-patterns 60] [--out REPORT.json] [--enrich]
 rules list [--scope NAME] [--json]
 rules show RULE_ID
 rules history RULE_ID
@@ -32,7 +35,7 @@ context check --input FILE
 review --project ID [--diff FILE | --base REF] [--file PATH ...]
        [--merge-base] [--staged] [--new-only] [--format text|json] [--out FILE]
 review --scope NAME [--format text|json] [--out FILE]
-agent-pack --project ID [--diff FILE | --base REF] --out FILE
+agent-pack --project ID [--diff FILE | --base REF] [--knowledge REPORT.json] --out FILE
 export --scope NAME --out NEW_FOLDER [--project ID]
 doctor
 
@@ -47,8 +50,8 @@ No AI API or network requests; no execution of inspected project code.
 
 function argumentsOf(args) {
   const positional=[],options={};
-  const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only']);
-  const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','by','reason','format','out','base','file','input']);
+  const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only','enrich']);
+  const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','min-files','max-files','max-patterns','knowledge','by','reason','format','out','base','file','input']);
   for (let i=0;i<args.length;i++) {
     const arg=args[i];
     if (!arg.startsWith('--')) {positional.push(arg);continue;}
@@ -126,6 +129,19 @@ export function main(args=process.argv.slice(2)) {
     const result=learnScope(context,scope,{docs:options.docs??[],mrs:options.mr??[],proposals:options.proposals??[],diff:one(options,'diff'),comments:one(options,'comments'),code:!options['no-code'],codePaths:options.code??[],minSamples,threshold});
     output(result,options);return 0;
   }
+  if(command==='mine') {
+    const projectId=one(options,'project');
+    assert(projectId && !one(options,'scope'),'mine requires one explicit --project ID, not --scope');
+    const numbers={minFiles:one(options,'min-files','3'),maxFiles:one(options,'max-files','20000'),maxPatterns:one(options,'max-patterns','60')};
+    for(const [key,value] of Object.entries(numbers))assert(/^\d+$/.test(value),'Invalid --'+key);
+    const report=mineProject(context,projectId,{codePaths:options.code??[],
+      minFiles:Number(numbers.minFiles),maxFiles:Number(numbers.maxFiles),maxPatterns:Number(numbers.maxPatterns)});
+    const summary=publicMineReport(report);
+    if(options.enrich && report.coverage.complete)summary.enrichment=enrichMine(context,report);
+    else if(options.enrich)summary.enrichment={status:'NOT_APPLIED_INCOMPLETE',reason:'Resolve coverage gaps before updating the catalog'};
+    output(summary,options);
+    return report.exitCode;
+  }
   if(command==='rules') {
     if(['approve','reject'].includes(action)) {
       assert(id,`rules ${action} requires RULE_ID`);
@@ -179,7 +195,13 @@ export function main(args=process.argv.slice(2)) {
     const ids=selectedProjects(context,options);
     assert(ids.length===1||(!one(options,'diff')&&!one(options,'base')&&!options.staged&&!options.file),'Diff/base/staged/file selection requires one project');
     const reports=ids.map(project=>reviewProject(context,catalog,project,reviewOptions(context,project,options)));
-    if(command==='agent-pack'){assert(ids.length===1,'agent-pack requires a single project');assert(one(options,'out'),'agent-pack requires --out');output(createAgentPack(context,catalog,reports[0]),{...options,format:['json']});}
+    if(command==='agent-pack'){
+      assert(ids.length===1,'agent-pack requires a single project');assert(one(options,'out'),'agent-pack requires --out');
+      const pack=createAgentPack(context,catalog,reports[0]);
+      const knowledgeFile=one(options,'knowledge');
+      if(knowledgeFile)pack.minedKnowledge=readMineKnowledge(context,ids[0],knowledgeFile);
+      output(pack,{...options,format:['json']});
+    }
     else output(reports.length===1?reports[0]:{schemaVersion:1,reports,exitCode:Math.max(...reports.map(r=>r.exitCode))},options,{text:reports.map(renderReport).join('\n')});
     return Math.max(...reports.map(r=>r.exitCode));
   }
