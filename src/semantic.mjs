@@ -390,7 +390,7 @@ export function reviewProjectSemantics(context,catalog,projectId,settings={}){
     message:'The type program is not bound to a complete staged index snapshot.'});
   if(settings.newOnly)errors.push({reason:'SEMANTIC_NEW_ONLY_UNPROVEN',
     message:'Semantic base/target equivalence has not been demonstrated; only touched nodes are shown.'});
-  if(unknown.some(item=>['INTERNAL_IMPORT_UNRESOLVED','INTERNAL_IMPORT_OUTSIDE_DOMAIN'].includes(item.reason)))
+  if(unknown.some(item=>['INTERNAL_IMPORT_UNRESOLVED','INTERNAL_IMPORT_OUTSIDE_DOMAIN','DYNAMIC_SPECIFIER'].includes(item.reason)))
     errors.push({reason:'SEMANTIC_GRAPH_PARTIAL'});
   if(diagnostics.length)errors.push({reason:'SEMANTIC_TYPES_PARTIAL',count:diagnostics.length});
   const cycles=graphCycles(edges);
@@ -405,7 +405,7 @@ export function reviewProjectSemantics(context,catalog,projectId,settings={}){
     coverage:{complete:errors.length===0,sourceFiles:sources.length,focusFiles:focus.length,
       semanticDiagnostics:diagnostics.length,graphEdges:edges.length,graphCycles:cycles.length,
       unresolved:unknown.length,readOnly:true,noProjectExecution:true,
-      fullProjectTypeCheck:errors.length===0&&roots.length===1&&roots[0]===project.root,
+      fullProjectTypeCheck:false,
       newOnlyProven:false},
     graph:{edges:edges.slice(0,1000).map(({node,...rest})=>rest),omittedEdges:Math.max(0,edges.length-1000),
       cycles,unknown:unknown.slice(0,100),unknownOmitted:Math.max(0,unknown.length-100)},
@@ -414,7 +414,7 @@ export function reviewProjectSemantics(context,catalog,projectId,settings={}){
     limitations:['React hook checks require direct symbol-checked react imports; unknown re-export chains are not treated as violations.',
       'Typed JSX props require one unambiguous local call signature without spread or index signatures.',
       'A top-level call does not prove runtime side effects. Approved policies can forbid syntactic invocations.',
-      'Internal graph is bounded; unresolved or excluded dependencies produce UNKNOWN, not inferred rule violations.',
+      'Internal graph is bounded; unresolved, computed or excluded dependencies produce UNKNOWN and an incomplete graph, not inferred rule violations.',
       settings.newOnly?'Semantic new-only attribution is unsupported and status is INCOMPLETE.':
         'Changed-line findings intersect changed syntax; they are not proven newly introduced.']};
 }
