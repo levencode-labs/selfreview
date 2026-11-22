@@ -6,6 +6,7 @@ import { approveRule, behaviorHash, KINDS } from '../src/rules.mjs';
 import { reviewProject, renderReport, diffFromGit } from '../src/review.mjs';
 import { learnScope, refreshScope } from '../src/learn.mjs';
 import { mineProject, enrichMine, publicMineReport, readMineKnowledge } from '../src/mine.mjs';
+import { reviewProjectSemantics } from '../src/semantic.mjs';
 import { sourceStatus, ruleHistory, previewRule, recordRuleDecision } from '../src/lifecycle.mjs';
 import { createTaskContext, checkTaskContext } from '../src/context.mjs';
 import { exportScope, createAgentPack } from '../src/export.mjs';
@@ -22,6 +23,8 @@ learn --scope NAME [--docs FILE_OR_FOLDER ...] [--mr FILE ...]
       [--code FOLDER ...] [--min-samples 5] [--threshold 0.9]
 mine --project ID [--code FOLDER ...] [--min-files 3]
      [--max-files 20000] [--max-patterns 60] [--out REPORT.json] [--enrich]
+semantic --project ID [--code FOLDER ...] [--tsconfig FILE]
+         [--semantic-profile FILE] [--max-semantic-files 4000] [--out FILE]
 rules list [--scope NAME] [--json]
 rules show RULE_ID
 rules history RULE_ID
@@ -33,7 +36,9 @@ sources refresh --scope NAME
 context --project ID [--file PATH ...] [--out FILE]
 context check --input FILE
 review --project ID [--diff FILE | --base REF] [--file PATH ...]
-       [--merge-base] [--staged] [--new-only] [--format text|json] [--out FILE]
+       [--merge-base] [--staged] [--new-only] [--semantic]
+       [--semantic-code FOLDER ...] [--tsconfig FILE] [--semantic-profile FILE]
+       [--max-semantic-files 4000] [--format text|json] [--out FILE]
 review --scope NAME [--format text|json] [--out FILE]
 agent-pack --project ID [--diff FILE | --base REF] [--knowledge REPORT.json] --out FILE
 export --scope NAME --out NEW_FOLDER [--project ID]
@@ -45,13 +50,15 @@ Import creates candidates only. Approve each reviewed rule explicitly.
 Exit codes: 0 = completed, 1 = enforced error, 2 = incomplete/configuration error.
 ADVISORY_ONLY, NO_CHANGES, NOT_APPLICABLE and MANUAL_REVIEW_REQUIRED are not full code approval.
 --file paths are project-relative; repeat the option for multiple files.
+Semantic graph is bounded, opt-in and requires a supported current-file snapshot.
+Approved manual rules plus SHA-pinned evidence are required for semantic enforcement.
 No AI API or network requests; no execution of inspected project code.
 `;
 
 function argumentsOf(args) {
   const positional=[],options={};
-  const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only','enrich']);
-  const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','min-files','max-files','max-patterns','knowledge','by','reason','format','out','base','file','input']);
+  const booleans=new Set(['help','version','json','no-code','merge-base','staged','new-only','enrich','semantic']);
+  const values=new Set(['config','scope','project','extends','docs','mr','diff','comments','proposals','code','min-samples','threshold','min-files','max-files','max-patterns','knowledge','tsconfig','semantic-profile','max-semantic-files','semantic-code','by','reason','format','out','base','file','input']);
   for (let i=0;i<args.length;i++) {
     const arg=args[i];
     if (!arg.startsWith('--')) {positional.push(arg);continue;}
@@ -89,13 +96,24 @@ function selectedProjects(context,options) {
   if(scope){const ids=context.config.projects.filter(p=>p.scope===scope).map(p=>p.id);assert(ids.length,`No projects in scope ${scope}`);return ids;}
   assert(context.config.projects.length===1,'Select --project ID or --scope NAME');return [context.config.projects[0].id];
 }
+function semanticOptions(options) {
+  const codePaths=options['semantic-code']??[];
+  const tsconfig=one(options,'tsconfig');
+  const profile=one(options,'semantic-profile');
+  const maxFiles=Number(one(options,'max-semantic-files','4000'));
+  assert(Number.isSafeInteger(maxFiles)&&maxFiles>0&&maxFiles<=10000,'Invalid --max-semantic-files');
+  return {codePaths,tsconfig,profile,maxFiles};
+}
 function reviewOptions(context,project,options) {
   const diff=one(options,'diff'),base=one(options,'base');assert(!(diff&&base),'Use --diff or --base, not both');
   assert(!options['merge-base']||base,'--merge-base requires --base');
   assert(!options.staged||!diff,'--staged cannot be combined with --diff');
   assert(!options['new-only']||base||options.staged,'--new-only requires --base or --staged');
   assert(!options['new-only']||!diff,'--new-only requires a trusted local Git baseline');
-  const selection={...(options.file?{files:options.file}:{}),newOnly:!!options['new-only']};
+  assert(options.semantic||!(options['semantic-code']||options.tsconfig||options['semantic-profile']||options['max-semantic-files']),
+    'Semantic options require --semantic');
+  const selection={...(options.file?{files:options.file}:{}),newOnly:!!options['new-only'],
+    ...(options.semantic?{semantic:semanticOptions(options)}:{})};
   if(base||options.staged)return {...diffFromGit(projectInfo(context,project).root,base??'HEAD',{mergeBase:!!options['merge-base'],staged:!!options.staged}),...selection};
   return diff?{diffText:fs.readFileSync(path.resolve(diff),'utf8'),...selection}:selection;
 }
@@ -171,6 +189,16 @@ export function main(args=process.argv.slice(2)) {
     output(rules,options,{text:rules.map(r=>`${r.id} | ${r.scope} | ${r.status} | ${r.check.kind} | ${r.title}`).join('\n')+'\n'});return 0;
   }
   const catalog=loadCatalog(context);
+  if(command==='semantic'){
+    const projectId=one(options,'project');
+    assert(projectId&&!one(options,'scope'),'semantic requires one explicit --project');
+    assert(!options.staged&&!options['new-only']&&!options['merge-base']&&!one(options,'base')&&!one(options,'diff'),
+      'Semantic standalone command uses current project snapshot; use review --semantic for Git diffs');
+    const semantic={...semanticOptions(options),codePaths:options.code??[]};
+    const report=reviewProjectSemantics(context,catalog,projectId,semantic);
+    output(report,{...options,format:['json']});
+    return report.exitCode;
+  }
   if(command==='sources') {
     assert(['status','refresh'].includes(action),'Use sources status or sources refresh');
     const scope=one(options,'scope');
