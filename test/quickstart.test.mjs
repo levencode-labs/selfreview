@@ -19,7 +19,7 @@ function fixture(t){
   return {root,react,data};
 }
 function invoke(f,args=[]){
-  return spawnSync(process.execPath,[cli,'quickstart','--project-path',f.root,'--data-dir',f.data,...args],
+  return spawnSync(process.execPath,[cli,'quickstart','--project-path',f.root,...(args.includes('--data-dir')?[]:['--data-dir',f.data]),...args],
     {encoding:'utf8',timeout:30000});
 }
 test('quickstart bootstraps once, mines react-apps and preserves catalog on repeated runs',t=>{
