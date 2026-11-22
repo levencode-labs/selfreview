@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/selfreview-banner.png" width="100%" alt="SelfReview — project conventions, AST checks and ESLint rules for JavaScript, TypeScript and React" />
+</p>
+
 # SelfReview
 
 [English](README.md) · [Русский](README.ru.md)

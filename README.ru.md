@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/selfreview-banner.png" width="100%" alt="SelfReview — правила проекта, проверки AST и ESLint для JavaScript, TypeScript и React" />
+</p>
+
 # SelfReview
 
 **Договорённости проекта, которые можно проследить до источника, подтвердить и проверить до код-ревью.**
