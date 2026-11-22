@@ -5,6 +5,7 @@ export { parseUnifiedDiff } from './diff.mjs';
 export { extractDocument, importMr, discoverConventions } from './ingest.mjs';
 export { reviewProject, renderReport, diffFromGit } from './review.mjs';
 export { learnScope, refreshScope } from './learn.mjs';
+export { mineProject, enrichMine, publicMineReport, readMineKnowledge } from './mine.mjs';
 export { sourceStatus, ruleHistory, previewRule, recordRuleDecision } from './lifecycle.mjs';
 export { createTaskContext, checkTaskContext } from './context.mjs';
 export { evaluateRuleExamples } from './examples.mjs';
