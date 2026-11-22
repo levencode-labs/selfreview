@@ -27,6 +27,12 @@ The standalone frontend pack can be rebuilt and restored from a clone. [Frontend
 
 The backend pack reviews C# and SQL against a selected Git diff. [Backend Conventions](packs/backend-conventions/README.md)
 
+## Discover conventions from an existing React monorepo
+
+A source-wide, **read-only** `mine` command can now discover recurring AST motifs across React/TypeScript folders (imports, hooks, JSX component/prop usage, component styles and call shapes). Use `--enrich` only to add **unapproved manual/advisory candidates** to an existing rule catalog; approved rules are preserved. An optional `agent-pack --knowledge REPORT.json` embeds the observed project skeleton separately from confirmed policy.
+
+[Mining walkthrough and Windows commands](docs/CODEBASE_MINING.md) · [Русский](docs/CODEBASE_MINING.ru.md)
+
 ## Why this exists
 
 Review feedback often repeats the same project-specific expectations: which APIs
