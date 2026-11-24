@@ -1,6 +1,7 @@
 import type { Finding, Severity } from "./types.js";
 import { getRuleMetadata, getRuleSource, allActiveRules, eslintSupportedRules, manualChecklistRegistry } from "../../../core/src/index.js";
 import type { ManualChecklistItem } from "../rules/manualChecklist.js";
+import { duplicateCodeId } from "./duplicates.js";
 import type { InternalDiagnostic } from "./diagnostics.js";
 import { describeDiagnostic } from "./diagnostics.js";
 
@@ -29,7 +30,8 @@ export function formatText(findings: Finding[]): string {
         if (group.length === 0) continue;
         lines.push(`\n== ${severity} (${group.length}) ==`);
         for (const f of group) {
-            lines.push(`${f.file}:${f.line}${f.column ? `:${f.column}` : ""}  [${f.ruleId} · ${SOURCE_TAG[getRuleSource(f.ruleId)]}]  ${f.message}`);
+            const label = f.ruleId === duplicateCodeId ? f.ruleId : `${f.ruleId} · ${SOURCE_TAG[getRuleSource(f.ruleId)]}`;
+            lines.push(`${f.file}:${f.line}${f.column ? `:${f.column}` : ""}  [${label}]  ${f.message}`);
         }
     }
     lines.push(

@@ -2,6 +2,7 @@ import type { FileDiff, Finding, Rule, RuleContext } from "./types.js";
 import { type FrontendConfig, disabledRuleIdsInSource, isIgnored } from "./config.js";
 import { isScssFile, isTsFile, parseTs, scanScssClassTokens } from "./parseSource.js";
 import type { InternalDiagnostic } from "./diagnostics.js";
+import { DuplicateFunctionIndex, duplicateCodeId, supportsDuplicateCheck } from "./duplicates.js";
 
 export interface RunOptions {
     repoRoot: string;
@@ -11,6 +12,7 @@ export interface RunOptions {
     hasRelatedFile?: (file: FileDiff, path: string) => boolean;
     listRelatedFiles?: (directory: string) => string[];
     rules: Rule[];
+    includeDuplicates?: boolean;
     config: FrontendConfig;
     /** если передан — собирает внутренние диагностики (правило упало / не спарсилось и т.п.) */
     onInternalDiagnostic?: (diagnostic: InternalDiagnostic) => void;
@@ -21,12 +23,14 @@ export function runRules(options: RunOptions): Finding[] {
     const activeRules = rules.filter((r) => !config.disable.includes(r.id));
 
     const findings: Finding[] = [];
+    const duplicates = options.includeDuplicates && !config.disable.includes(duplicateCodeId) ? new DuplicateFunctionIndex() : undefined;
 
     for (const file of files) {
         if (isIgnored(file.path, config)) continue;
+        const scanDuplicates = duplicates && isTsFile(file.path) && supportsDuplicateCheck(file.path);
 
         const applicable = activeRules.filter((r) => r.appliesTo(file.path));
-        if (applicable.length === 0) continue;
+        if (applicable.length === 0 && !scanDuplicates) continue;
 
         let sourceText: string;
         try {
@@ -44,7 +48,7 @@ export function runRules(options: RunOptions): Finding[] {
 
         // Правило крита: файл парсится ОДИН раз, AST и SCSS-токены переиспользуются всеми правилами.
         let ast: RuleContext["ast"] = undefined;
-        if (applicable.some((r) => r.usesAst) && isTsFile(file.path)) {
+        if ((scanDuplicates || applicable.some((r) => r.usesAst)) && isTsFile(file.path)) {
             ast = parseTs(sourceText, file.path);
             if (ast === null) {
                 onInternalDiagnostic?.({
@@ -54,6 +58,8 @@ export function runRules(options: RunOptions): Finding[] {
                 });
             }
         }
+
+        if (scanDuplicates && ast && !inlineDisabled.has(duplicateCodeId)) duplicates?.add(file, ast);
 
         let scssTokens: RuleContext["scssTokens"] = undefined;
         if (applicable.some((r) => r.usesScssTokens) && isScssFile(file.path)) {
@@ -92,6 +98,7 @@ export function runRules(options: RunOptions): Finding[] {
         }
     }
 
+    if (duplicates) findings.push(...duplicates.findings());
     return findings;
 }
 

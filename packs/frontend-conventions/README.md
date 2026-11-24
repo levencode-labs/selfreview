@@ -38,6 +38,8 @@ node dist/auditor/src/cli.js check --repo <project> --base <base> --head <head> 
 
 Exit 0 means no blocking finding. Exit 1 signals a blocking finding or a MUST under strict mode, and exit 2 signals incomplete analysis in strict mode. Read the JSON diagnostics, verify the snapshot, and complete the applicable manual checks. [Registry and checklist](core/src/registry.ts)
 
+Add `--duplicates` to report matching TS/TSX function implementations within the files selected by the diff. The check ignores formatting, comments and outer function names. It skips short bodies, test files and usual generated directories, and requires at least one changed body. Candidates are informational, including in strict mode. Compare callers and contracts before extracting shared code. Unchanged files outside the diff and similar bodies that rename variables or change operations require manual review.
+
 ## Matrix
 
 Each row in [the synthetic matrix](checks/matrix.json) holds a rule, an authored snippet, an expected outcome and any required path or diff context. `npm test` asserts coverage for every active rule, compares findings from both entry points where supported, and checks Git snapshots and profile scope using a temporary fictional repository. Two cases record decisions requiring human review. The fixture source is parsed without execution.

@@ -19,7 +19,7 @@ const USAGE = `frontend-conventions — проверка diff ветки от б
 Использование:
   frontend-conventions check --repo <путь> [--base origin/release] [--head HEAD]
                          [--format text|json|sarif] [--out файл] [--strict]
-                         [--path <pathspec>] [--no-checklist] [--worktree] [--local-only]
+                         [--path <pathspec>] [--no-checklist] [--worktree] [--local-only] [--duplicates]
   frontend-conventions rules [--eslint]
   frontend-conventions doctor --repo <путь> [--base ...] [--head ...]
   frontend-conventions --help | --version
@@ -38,6 +38,7 @@ check options:
   --out <файл>         записать отчёт в файл вместо stdout
   --strict             exit 1 при BLOCK или MUST; внутренние ошибки движка делают exit 2
   --no-checklist       не печатать ручной чек-лист
+  --duplicates         искать совпадающие реализации функций в TS/TSX-файлах diff (info)
   --worktree           учесть незакоммиченные правки: к закоммиченному diff ветки (base...head,
                        как в merge request) добавляются staged/unstaged и untracked-файлы.
                        Закоммиченная часть читается из ревизии head, а не с диска, поэтому
@@ -57,10 +58,11 @@ interface Args {
     noChecklist: boolean;
     worktree: boolean;
     localOnly: boolean;
+    duplicates: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-    const args: Args = { repo: process.cwd(), base: "origin/release", head: "HEAD", format: "text", strict: false, pathspec: [], noChecklist: false, worktree: false, localOnly: false };
+    const args: Args = { repo: process.cwd(), base: "origin/release", head: "HEAD", format: "text", strict: false, pathspec: [], noChecklist: false, worktree: false, localOnly: false, duplicates: false };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === "--repo") args.repo = argv[++i];
@@ -71,6 +73,7 @@ function parseArgs(argv: string[]): Args {
         else if (a === "--strict") args.strict = true;
         else if (a === "--path") args.pathspec.push(argv[++i]);
         else if (a === "--no-checklist") args.noChecklist = true;
+        else if (a === "--duplicates") args.duplicates = true;
         else if (a === "--worktree") args.worktree = true;
         else if (a === "--local-only") { args.localOnly = true; args.worktree = true; }
     }
@@ -110,6 +113,7 @@ function cmdCheck(args: Args): number {
                 : readFileAtRef(repoRoot, args.head, path);
         },
         rules: allRules,
+        includeDuplicates: args.duplicates,
         config,
         onInternalDiagnostic: (d) => diagnostics.push(d),
     });

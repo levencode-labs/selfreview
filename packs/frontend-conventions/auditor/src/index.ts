@@ -48,6 +48,8 @@ export interface CheckRequest {
     ruleIds?: string[];
     /** не возвращать ручной чек-лист (default: false) */
     noChecklist?: boolean;
+    /** Включить информационный поиск совпадающих реализаций в файлах diff. */
+    includeDuplicates?: boolean;
 }
 
 export interface CheckReport {
@@ -101,6 +103,7 @@ export function runCheck(request: CheckRequest): CheckReport {
             return related ? readSource(related) : readFileAtRef(repoPath, head, path);
         },
         rules,
+        includeDuplicates: request.includeDuplicates,
         config,
         onInternalDiagnostic: (d) => internalDiagnostics.push(d),
     } satisfies RunOptions);

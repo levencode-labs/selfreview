@@ -23,9 +23,9 @@ function commit(message) {
         "-c", "core.hooksPath=" + join(scratch, "disabled-hooks"), "commit", "-qm", message);
     return git("rev-parse", "HEAD");
 }
-function check(base, head, expected) {
+function check(base, head, expected, ...flags) {
     const run = spawnSync(process.execPath, [entry, "check", "--repo", repo, "--base", base,
-        "--head", head, "--format", "json", "--strict"], { env, encoding: "utf8" });
+        "--head", head, "--format", "json", "--strict", ...flags], { env, encoding: "utf8" });
     assert.equal(run.status, expected, run.stderr || run.stdout);
     return JSON.parse(run.stdout);
 }
@@ -51,7 +51,8 @@ try {
     assert.equal(report.findings.filter(item => item.ruleId === "RUI-5").length, 1);
     assert.ok(report.findings.find(item => item.ruleId === "RUI-5").file.startsWith(settings.targetApp + "/"));
     assert.ok(!report.findings.some(item => item.ruleId === "TS-3"));
-    assert.equal(report.manualChecklist.length, 26);
+    assert.equal(report.manualChecklist.length, 27);
+    assert.ok(report.manualChecklist.some(item => item.id === "REVIEW-DUPLICATION"));
 
     write("debug.ts", "console.log('changed example');\n");
     const problem = commit("visible violation");
@@ -59,7 +60,39 @@ try {
     write("broken.tsx", "export const Broken = () => <div>;");
     const broken = commit("syntax error");
     assert.ok(check(problem, broken, 2).internalDiagnostics.some(item => item.code === "PARSE_FAILED"));
-    console.log("CLI Git snapshots, profile scope, suppression, checklist and incomplete result verified.");
+    const body = [
+        "    const record = context.readRecord();",
+        "    if (!record) {",
+        "        return context.reportMissingRecord();",
+        "    }",
+        "    context.validateRecord(record);",
+        "    return context.saveRecord(record);",
+    ].join("\n");
+    const sourceA = "export function saveFirst(context: Context) {\n" + body + "\n}\n";
+    const sourceB = "export function saveSecond(context: Context) {\n    // Formatting and names of the functions may differ.\n"
+        + body.replaceAll(";", "") + "\n}\n";
+    const duplicateFindings = (report) => report.findings.filter(item => item.ruleId === "DUPLICATE-CODE");
+    write("first.ts", sourceA);
+    write("second.ts", sourceB);
+    write("different.ts", sourceA.replace("saveRecord", "updateRecord"));
+    write("generated/copy.ts", sourceA);
+    write("copy.spec.ts", sourceA);
+    write("small.ts", "export function first() { start(); stop(); }\nexport function second() { start(); stop(); }\n");
+    const duplicated = commit("duplicate functions");
+    assert.deepEqual(duplicateFindings(check(broken, duplicated, 0)), []);
+    const matches = duplicateFindings(check(broken, duplicated, 0, "--duplicates"));
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].severity, "info");
+    assert.equal(matches[0].file, "first.ts");
+    assert.match(matches[0].message, /second\.ts:1/);
+    assert.doesNotMatch(matches[0].message, /different|generated|spec|small/);
+
+    write("first.ts", "// Header changed\n" + sourceA);
+    write("second.ts", "// Header changed\n" + sourceB);
+    const headers = commit("change outside both functions");
+    assert.deepEqual(duplicateFindings(check(duplicated, headers, 0, "--duplicates")), []);
+    assert.deepEqual(duplicateFindings(check(broken, headers, 0, "--duplicates", "--path", "first.ts")), []);
+    console.log("CLI Git snapshots, profile scope, suppression, checklist, incomplete result and duplicate candidates verified.");
 } finally {
     assert.equal(dirname(realpathSync(scratch)), tempRoot);
     rmSync(scratch, { recursive: true, force: true });
